@@ -61,8 +61,8 @@ init _ =
     ( { score = 0
       , currentQuestion = Nothing
       , questions = Purgatory
-      , activeQClasses = [ Question.KorToEng ]
-      , activeCats = Set.fromList [ "Verb" ]
+      , activeQClasses = [ Question.EngToKor, Question.KorToEng ]
+      , activeCats = Set.fromList [ "School" ]
       , gameOver = False
       }
     , Cmd.none

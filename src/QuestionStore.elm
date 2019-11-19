@@ -6,7 +6,13 @@ import Set exposing (Set)
 
 allQuestions : List Question
 allQuestions =
-    List.concat [ randomQuestions, locationQuestions, verbQuestions ]
+    List.concat
+        [ randomQuestions
+        , locationQuestions
+        , verbQuestions
+        , objectQuestions
+        , schoolQuestions
+        ]
 
 
 randomQuestions =
@@ -90,6 +96,27 @@ locationQuestions =
         , ( "뒤", "behind" )
         , ( "식당", "restaurant" )
         , ( "학교", "school" )
+        , ( "대학교", "university" )
+        , ( "빌딩", "building" )
+        , ( "안", "in" )
+        , ( "앞", "front" )
+        , ( "어디", "where" )
+        , ( "옆", "beside" )
+        , ( "학생회관", "student centre" )
+        , ( "캠퍼스", "campus" )
+        , ( "층", "storey" )
+        ]
+
+
+objectQuestions =
+    List.map (\( hanguel, english ) -> Question hanguel (JustEnglish english) (Set.fromList [ "Object" ]))
+        [ ( "가방", "bag" )
+        , ( "시계", "clock" )
+        , ( "의자", "chair" )
+        , ( "책상", "desk" )
+        , ( "책", "book" )
+        , ( "숙제", "homework" )
+        , ( "아침", "breakfast/morning" )
         ]
 
 
@@ -121,5 +148,24 @@ verbQuestions =
         , ( "공부해요", "study" )
         , ( "자요", "sleep" )
         , ( "앉아요", "sit down" )
-        , ( "비싸요", "is expensive")
+        , ( "비싸요", "is expensive" )
+        , ( "아주", "very" )
+        , ( "참", "very" )
+        , ( "그리고", "and also" )
+        , ( "그런데", "however" )
+        ]
+
+
+schoolQuestions =
+    List.map (\( hanguel, english ) -> Question hanguel (JustEnglish english) (Set.fromList [ "School" ]))
+        [ ( "경제학", "economics" )
+        , ( "교과서", "textbook" )
+        , ( "교실", "classroom" )
+        , ( "내일", "tomorrow" )
+        , ( "반", "class, room" )
+        , ( "사전", "dictionary" )
+        , ( "수업", "course, class" )
+        , ( "시간", "time" )
+        , ( "여자", "woman" )
+        , ( "질문", "question" )
         ]
