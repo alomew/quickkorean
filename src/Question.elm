@@ -55,6 +55,17 @@ compatibleClassesSplit question =
             ( KorToEng, [ EngToKor, Pronounce ] )
 
 
+compatibleClassesMaybe question qClasses =
+    case
+        List.filter (\qClass -> List.member qClass qClasses) <| compatibleClasses question
+    of
+        [] ->
+            Nothing
+
+        qClass :: otherClasses ->
+            Just ( qClass, otherClasses )
+
+
 compatibleCategories : Question -> Set Category -> Bool
 compatibleCategories q cats =
     not <| Set.isEmpty <| Set.intersect q.categories cats
@@ -76,39 +87,6 @@ compatibleQuestions classes cats allQuestions =
 shuffleQuestions : List Question -> Generator (List Question)
 shuffleQuestions =
     RList.shuffle
-
-
-
--- Random.Extra has the convenience function "choose" which gives us a maybe
-
-
-{-| when given a `questionClass`, give a possible question of an appropriate category
--}
-newQuestionOfClass : List Question -> QuestionClass -> Set Category -> Generator (Maybe ( Question, List Question ))
-newQuestionOfClass possibleQuestions qClass cats =
-    RList.choose (List.filter (\q -> (List.member qClass <| compatibleClasses q) && compatibleCategories q cats) possibleQuestions)
-        |> Random.map
-            (\( maybeQ, _ ) ->
-                case maybeQ of
-                    Just q ->
-                        Just ( q, ListE.remove q possibleQuestions )
-
-                    Nothing ->
-                        Nothing
-            )
-
-
-{-| When given a number of `questionClass`es, give a
-possible question if possible, or return `Nothing`
--}
-newQuestion : List Question -> Maybe ( Question, List Question )
-newQuestion qs =
-    case qs of
-        [] ->
-            Nothing
-
-        q :: qss ->
-            Just ( q, qss )
 
 
 extractAnswer : Question -> QuestionClass -> String
@@ -216,37 +194,43 @@ insertAnswerIntoPlace answer option1 option2 correctPlace =
             ( option1, option2, answer )
 
 
-newPlayingQuestion : List Question -> List Question -> Random.Generator (Maybe ( PlayingQuestion, List Question ))
-newPlayingQuestion availQs allQs =
+newPlayingQuestion : List Question -> List Question -> List QuestionClass -> Generator (Maybe ( PlayingQuestion, List Question ))
+newPlayingQuestion availQs allQs qClasses =
     case availQs of
         [] ->
             Random.constant Nothing
 
         q :: restQs ->
-            chooseQClass q
+            chooseQClass q qClasses
                 |> Random.andThen
-                    (\qClass ->
-                        Random.map2
-                            (\( a1, a2 ) correctPlace ->
-                                Just
-                                    ( PlayingQuestion
-                                        Nothing
-                                        (insertAnswerIntoPlace (extractAnswer q qClass) a1 a2 correctPlace)
-                                        correctPlace
-                                        (extractPrompt q qClass)
-                                        qClass
-                                    , restQs
+                    (\mqClass ->
+                        case mqClass of
+                            Nothing ->
+                                Random.constant Nothing
+
+                            Just qClass ->
+                                Random.map2
+                                    (\( a1, a2 ) correctPlace ->
+                                        Just
+                                            ( PlayingQuestion
+                                                Nothing
+                                                (insertAnswerIntoPlace (extractAnswer q qClass) a1 a2 correctPlace)
+                                                correctPlace
+                                                (extractPrompt q qClass)
+                                                qClass
+                                            , restQs
+                                            )
                                     )
-                            )
-                            (getWrongAnswers allQs q qClass)
-                            (Random.uniform LeftPlace [ MiddlePlace, RightPlace ])
+                                    (getWrongAnswers allQs q qClass)
+                                    (Random.uniform LeftPlace [ MiddlePlace, RightPlace ])
                     )
 
 
-chooseQClass : Question -> Generator QuestionClass
-chooseQClass question =
-    let
-        ( one, others ) =
-            compatibleClassesSplit question
-    in
-    Random.uniform one others
+chooseQClass : Question -> List QuestionClass -> Generator (Maybe QuestionClass)
+chooseQClass question qClasses =
+    case compatibleClassesMaybe question qClasses of
+        Nothing ->
+            Random.constant Nothing
+
+        Just ( one, others ) ->
+            Random.uniform one others |> Random.map Just

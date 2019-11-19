@@ -2,7 +2,7 @@ module Main exposing (..)
 
 import Browser
 import Browser.Events
-import Element exposing (Element, alignBottom, alignLeft, alignRight, centerX, centerY, column, el, fill, height, padding, paddingEach, pointer, px, rgb, rgb255, row, shrink, spacing, text, width)
+import Element exposing (Element, centerX, column, el, fill, height, padding, paddingEach, pointer, rgb, shrink, spacing, text, width)
 import Element.Events exposing (onClick)
 import Element.Font exposing (color, size)
 import Element.Input exposing (button)
@@ -131,6 +131,7 @@ update msg game =
                         (newPlayingQuestion
                             left
                             all
+                            game.activeQClasses
                         )
 
                 _ ->
@@ -155,14 +156,14 @@ update msg game =
                     ( { game
                         | questions = Shuffled { all = all, left = qs }
                       }
-                    , Random.generate NextQuestions (newPlayingQuestion qs all)
+                    , Random.generate NextQuestions (newPlayingQuestion qs all game.activeQClasses)
                     )
 
                 Shuffled { left, all } ->
                     ( { game
                         | questions = Shuffled { left = left, all = all }
                       }
-                    , Random.generate NextQuestions (newPlayingQuestion qs all)
+                    , Random.generate NextQuestions (newPlayingQuestion qs all game.activeQClasses)
                     )
 
 
@@ -239,17 +240,6 @@ edges =
 viewAnswers : ( String, String, String ) -> Maybe AnswerPlace -> Element Msg
 viewAnswers ( leftOpt, midOpt, rightOpt ) selected =
     let
-        alignment place =
-            case place of
-                LeftPlace ->
-                    alignLeft
-
-                MiddlePlace ->
-                    centerX
-
-                RightPlace ->
-                    alignRight
-
         optionText place =
             case place of
                 LeftPlace ->
