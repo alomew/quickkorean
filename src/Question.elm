@@ -43,6 +43,7 @@ compatibleClasses question =
     first :: rest
 
 
+compatibleClassesSplit : Question -> ( QuestionClass, List QuestionClass )
 compatibleClassesSplit question =
     case question.answers of
         JustEnglish _ ->
@@ -55,6 +56,7 @@ compatibleClassesSplit question =
             ( KorToEng, [ EngToKor, Pronounce ] )
 
 
+compatibleClassesMaybe : Question -> List QuestionClass -> Maybe ( QuestionClass, List QuestionClass )
 compatibleClassesMaybe question qClasses =
     case
         List.filter (\qClass -> List.member qClass qClasses) <| compatibleClasses question
@@ -168,11 +170,12 @@ getWrongAnswers allQs currentQuestion qClass =
 
 
 type alias PlayingQuestion =
-    { selectedPlace : Maybe AnswerPlace
+    { selectedPlace : Maybe GivenAnswer
     , options : ( String, String, String )
     , correctPlace : AnswerPlace
     , prompt : String
     , questionClass : QuestionClass
+    , question : Question -- we include this so that we can put a question we got wrong on the retry stack.
     }
 
 
@@ -182,6 +185,12 @@ type AnswerPlace
     | RightPlace
 
 
+type GivenAnswer
+    = Place AnswerPlace
+    | Unsure
+
+
+insertAnswerIntoPlace : String -> String -> String -> AnswerPlace -> ( String, String, String )
 insertAnswerIntoPlace answer option1 option2 correctPlace =
     case correctPlace of
         LeftPlace ->
@@ -218,6 +227,7 @@ newPlayingQuestion availQs allQs qClasses =
                                                 correctPlace
                                                 (extractPrompt q qClass)
                                                 qClass
+                                                q
                                             , restQs
                                             )
                                     )
