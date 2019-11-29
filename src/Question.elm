@@ -26,8 +26,17 @@ type QuestionClass
     | Pronounce
 
 
+allQuestionClasses =
+    [ KorToEng, EngToKor, Pronounce ]
+
+
 type alias Category =
     String
+
+
+allCategories : List Question -> Set String
+allCategories qs =
+    List.foldl (\q acc -> Set.union q.categories acc) Set.empty qs
 
 
 

@@ -2,10 +2,10 @@ module Main exposing (..)
 
 import Browser
 import Browser.Events
-import Element exposing (Element, centerX, column, el, fill, height, padding, paddingEach, pointer, rgb, shrink, spacing, text, width)
+import Element exposing (Element, alignLeft, alignRight, alignTop, centerX, centerY, column, el, fill, height, padding, paddingEach, pointer, rgb, row, shrink, spacing, text, width)
 import Element.Events exposing (onClick)
 import Element.Font exposing (color, size)
-import Element.Input exposing (button)
+import Element.Input as Input exposing (button)
 import Html exposing (Html)
 import Json.Decode as Decode
 import List.Extra
@@ -36,10 +36,9 @@ main =
 -- Model
 
 
-type alias WordPair =
-    { hang : String
-    , phonetic : String
-    }
+type Screen
+    = QuestionSelect
+    | Quiz
 
 
 type alias Game =
@@ -49,7 +48,14 @@ type alias Game =
     , questions : QuestionsInWaiting
     , activeQClasses : List QuestionClass
     , activeCats : Set Category
+    , screen : Screen
+    , ready : Bool
     }
+
+
+allCats : List Category
+allCats =
+    Set.toList <| allCategories allQuestions
 
 
 type QuestionsInWaiting
@@ -63,13 +69,37 @@ type QuestionsInWaiting
         }
 
 
+readyToStart : List Question -> Bool
+readyToStart qs =
+    let
+        everyQClassHappy =
+            allQuestionClasses
+                |> List.map
+                    (\qClass ->
+                        List.filter
+                            (\question ->
+                                List.member qClass (compatibleClasses question)
+                            )
+                            qs
+                            |> List.length
+                    )
+                |> List.all (\count -> count == 0 || count >= 3)
+
+        weHathAQuestion =
+            List.length qs > 0
+    in
+    weHathAQuestion && everyQClassHappy
+
+
 init : () -> ( Game, Cmd Msg )
 init _ =
     ( { score = 0
       , currentQuestion = Nothing
       , questions = Purgatory
-      , activeQClasses = [ Question.EngToKor, Question.KorToEng ]
-      , activeCats = Set.fromList [ "School" ]
+      , activeQClasses = []
+      , activeCats = Set.empty
+      , screen = QuestionSelect
+      , ready = False
       }
     , Cmd.none
     )
@@ -78,6 +108,11 @@ init _ =
 siftQuestions : Game -> List Question
 siftQuestions g =
     compatibleQuestions g.activeQClasses g.activeCats allQuestions
+
+
+type QuestionOption
+    = Category String
+    | Direction QuestionClass
 
 
 
@@ -91,6 +126,7 @@ type Msg
     | NeedNewQuestion
     | Start
     | ShuffledQs (List Question)
+    | ToggledOption QuestionOption Bool
 
 
 update : Msg -> Game -> ( Game, Cmd Msg )
@@ -177,13 +213,21 @@ update msg game =
             )
 
         Start ->
-            let
-                sifted =
-                    siftQuestions game
-            in
-            ( { game | questions = Sifted sifted }
-            , Random.generate ShuffledQs <| shuffleQuestions sifted
-            )
+            case game.questions of
+                Purgatory ->
+                    ( game, Cmd.none )
+
+                Shuffled _ ->
+                    ( game, Cmd.none )
+
+                Sifted sifted ->
+                    if readyToStart sifted then
+                        ( { game | screen = Quiz }
+                        , Random.generate ShuffledQs <| shuffleQuestions sifted
+                        )
+
+                    else
+                        ( game, Cmd.none )
 
         ShuffledQs qs ->
             case game.questions of
@@ -202,6 +246,56 @@ update msg game =
                         | questions = Shuffled { lar | left = qs, retry = [], progress = ( 0, List.length qs ) }
                       }
                     , Random.generate NextQuestions (newPlayingQuestion qs all game.activeQClasses)
+                    )
+
+        ToggledOption option toInsert ->
+            case option of
+                Category cat ->
+                    let
+                        currentCats =
+                            if toInsert then
+                                Set.insert cat game.activeCats
+
+                            else
+                                Set.remove cat game.activeCats
+
+                        questions =
+                            compatibleQuestions
+                                game.activeQClasses
+                                currentCats
+                                allQuestions
+                    in
+                    ( { game
+                        | activeCats = currentCats
+                        , questions =
+                            Sifted <| questions
+                        , ready = readyToStart questions
+                      }
+                    , Cmd.none
+                    )
+
+                Direction d ->
+                    let
+                        currentQClasses =
+                            if toInsert then
+                                d :: game.activeQClasses
+
+                            else
+                                List.Extra.remove d game.activeQClasses
+
+                        questions =
+                            compatibleQuestions
+                                currentQClasses
+                                game.activeCats
+                                allQuestions
+                    in
+                    ( { game
+                        | activeQClasses = currentQClasses
+                        , questions =
+                            Sifted <| questions
+                        , ready = readyToStart questions
+                      }
+                    , Cmd.none
                     )
 
 
@@ -383,7 +477,99 @@ viewAnswers ( leftOpt, midOpt, rightOpt ) selected =
 
 
 view : Game -> Html Msg
-view game =
+view g =
+    case g.screen of
+        Quiz ->
+            viewQuiz g
+
+        QuestionSelect ->
+            viewQuestionSelect g
+
+
+viewSelector : Category -> (Bool -> Msg) -> Bool -> Element Msg
+viewSelector label msg checked =
+    Input.checkbox [ width shrink ]
+        { onChange = msg
+        , icon = Input.defaultCheckbox
+        , checked = checked
+        , label =
+            Input.labelRight []
+                (text label)
+        }
+
+
+textOfQClass : QuestionClass -> String
+textOfQClass qClass =
+    case qClass of
+        Question.KorToEng ->
+            "Korean to English"
+
+        Question.EngToKor ->
+            "English to Korean"
+
+        Question.Pronounce ->
+            "Pronunciation of Hangeul"
+
+
+viewQuestionSelect : Game -> Html Msg
+viewQuestionSelect game =
+    Element.layout [ size 30 ] <|
+        column [ width fill, spacing 50, height shrink, centerY ]
+            [ row [ width fill, spacing 30 ]
+                [ column [ alignLeft, spacing 10, width fill, alignTop ]
+                    [ el [ centerX, width shrink ] (text "Topics")
+                    , column [ centerX, width shrink ] <|
+                        List.map
+                            (\cat ->
+                                viewSelector
+                                    cat
+                                    (ToggledOption (Category cat))
+                                    (Set.member
+                                        cat
+                                        game.activeCats
+                                    )
+                            )
+                            allCats
+                    ]
+                , column [ alignRight, spacing 10, width fill, alignTop ]
+                    [ el [ centerX, width shrink ] (text "Question Styles")
+                    , column [ centerX, width shrink ] <|
+                        List.map
+                            (\qClass ->
+                                viewSelector
+                                    (textOfQClass qClass)
+                                    (ToggledOption (Direction qClass))
+                                    (List.member
+                                        qClass
+                                        game.activeQClasses
+                                    )
+                            )
+                            allQuestionClasses
+                    ]
+                ]
+            , button
+                [ centerX
+                , size 40
+                , color <|
+                    if game.ready then
+                        rgb 0 0 0
+
+                    else
+                        rgb 1 0 0
+                ]
+                { onPress =
+                    if game.ready then
+                        Just Start
+
+                    else
+                        Nothing
+                , label = text "Start"
+                }
+            ]
+
+
+viewQuiz : Game -> Html Msg
+viewQuiz game =
     Element.layout [] <|
         column [ centerX, width shrink, padding 50, spacing 50, height fill ]
             [ case game.questions of
@@ -406,7 +592,7 @@ view game =
                 , el [ size 40, centerX ]
                     (text <| String.fromInt game.score)
                 ]
-            , column [ spacing 20 ]
+            , column [ spacing 20, centerX ]
                 (case game.currentQuestion of
                     Just cq ->
                         [ el

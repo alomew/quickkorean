@@ -12,6 +12,8 @@ allQuestions =
         , verbQuestions
         , objectQuestions
         , schoolQuestions
+        , timeQuestions
+        , greetingQuestions
         ]
 
 
@@ -149,8 +151,8 @@ verbQuestions =
         , ( "자요", "sleep" )
         , ( "앉아요", "sit down" )
         , ( "비싸요", "is expensive" )
-        , ( "아주", "very" )
-        , ( "참", "very" )
+        , ( "아주", "very a..." )
+        , ( "참", "very ch..." )
         , ( "그리고", "and also" )
         , ( "그런데", "however" )
         ]
@@ -161,11 +163,49 @@ schoolQuestions =
         [ ( "경제학", "economics" )
         , ( "교과서", "textbook" )
         , ( "교실", "classroom" )
-        , ( "내일", "tomorrow" )
-        , ( "반", "class, room" )
+        , ( "반", "class" )
         , ( "사전", "dictionary" )
         , ( "수업", "course, class" )
-        , ( "시간", "time" )
         , ( "여자", "woman" )
         , ( "질문", "question" )
+        , ("우산", "umbrella")
+        , ("집", "house, home")
+        , ("친구", "friend")
+        , ("컴퓨터", "computer")
+        , ("누구", "who")
+        , ("인사해유", "greets")
+        , ("재미있어유", "to be interesting")
+        , ("많이", "many")
+        , ("시험", "exam")
+        , ("남자", "man")
+        , ("역사", "history")
+        , ("주스", "juice")
+        , ("텔레비전", "television")
+        , ("만나요", "meets")
+        , ("지내요", "to get along, to be doing")
+        , ("그래서", "so, therefore")
+        , ("그럼", "(if so) then")
+        , ("어떻게", "how")
+        , ("잘", "well")
+        , ("재미없어요", "is uninteresting")
+        , ("열심ㅎ", "diligently")
         ]
+
+timeQuestions =
+    List.map (\( hanguel, english ) -> Question hanguel (JustEnglish english) (Set.fromList [ "Time" ]))
+    [ ("매일", "every day")
+        , ("요즘", "these days")
+        , ("지금", "now")
+        , ( "내일", "tomorrow" )
+        , ( "시간", "time" )
+        , ("오늘", "today")
+
+    ]
+
+greetingQuestions =
+    List.map (\( hanguel, english ) -> Question hanguel (JustEnglish english) (Set.fromList [ "Greeting" ]))
+    [ ("어떻게 지내세요?", "How are you doing?")
+    , ("바빠요", "I am busy")
+    , ("그저 그래요", "Just so-so")
+    , ("잘 지내요", "I am doing well")
+    ]
