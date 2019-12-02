@@ -2,9 +2,11 @@ module Main exposing (..)
 
 import Browser
 import Browser.Events
-import Element exposing (Element, alignLeft, alignRight, alignTop, centerX, centerY, column, el, fill, height, padding, paddingEach, pointer, rgb, row, shrink, spacing, text, width)
+import Element exposing (Element, alignLeft, alignRight, alignTop, centerX, centerY, column, el, fill, height, padding, paddingEach, pointer, px, rgb, rgb255, row, shrink, spacing, text, width)
+import Element.Background as Background
+import Element.Border as Border
 import Element.Events exposing (onClick)
-import Element.Font exposing (color, size)
+import Element.Font as Font exposing (color, size)
 import Element.Input as Input exposing (button)
 import Html exposing (Html)
 import Json.Decode as Decode
@@ -50,6 +52,7 @@ type alias Game =
     , activeCats : Set Category
     , screen : Screen
     , ready : Bool
+    , progress : Int
     }
 
 
@@ -65,7 +68,7 @@ type QuestionsInWaiting
         { left : List Question
         , all : List Question
         , retry : List Question
-        , progress : ( Int, Int )
+        , number : Int
         }
 
 
@@ -91,16 +94,22 @@ readyToStart qs =
     weHathAQuestion && everyQClassHappy
 
 
+resettedState : Game
+resettedState =
+    { score = 0
+    , currentQuestion = Nothing
+    , questions = Purgatory
+    , activeQClasses = [ Question.KorToEng, Question.EngToKor ]
+    , activeCats = Set.empty
+    , screen = QuestionSelect
+    , ready = False
+    , progress = 0
+    }
+
+
 init : () -> ( Game, Cmd Msg )
 init _ =
-    ( { score = 0
-      , currentQuestion = Nothing
-      , questions = Purgatory
-      , activeQClasses = []
-      , activeCats = Set.empty
-      , screen = QuestionSelect
-      , ready = False
-      }
+    ( resettedState
     , Cmd.none
     )
 
@@ -127,11 +136,15 @@ type Msg
     | Start
     | ShuffledQs (List Question)
     | ToggledOption QuestionOption Bool
+    | Reset
 
 
 update : Msg -> Game -> ( Game, Cmd Msg )
 update msg game =
     case msg of
+        Reset ->
+            ( resettedState, Cmd.none )
+
         NextQuestions a ->
             case a of
                 Just ( nextQuestion, remainingQuestions ) ->
@@ -147,17 +160,13 @@ update msg game =
                                         { left = remainingQuestions
                                         , all = allQs
                                         , retry = []
-                                        , progress = ( 0, List.length remainingQuestions )
+                                        , number = List.length remainingQuestions
                                         }
 
                                 Shuffled qs ->
                                     Shuffled
                                         { qs
                                             | left = remainingQuestions
-                                            , progress =
-                                                ( 1 + Tuple.first qs.progress
-                                                , Tuple.second qs.progress
-                                                )
                                         }
                       }
                     , Cmd.none
@@ -168,31 +177,27 @@ update msg game =
                         Purgatory ->
                             ( game, Cmd.none )
 
-                        _ ->
-                            ( { game
-                                | currentQuestion = Nothing
-                              }
+                        Sifted allQs ->
+                            ( { game | currentQuestion = Nothing }
                             , Random.generate ShuffledQs <|
-                                shuffleQuestions
-                                    (case game.questions of
-                                        Purgatory ->
-                                            []
-
-                                        Sifted allQs ->
-                                            allQs
-
-                                        Shuffled { retry, all } ->
-                                            case retry of
-                                                [] ->
-                                                    all
-
-                                                _ ->
-                                                    retry
-                                    )
+                                shuffleQuestions allQs
                             )
 
+                        Shuffled { retry } ->
+                            case retry of
+                                [] ->
+                                    ( resettedState
+                                    , Cmd.none
+                                    )
+
+                                _ ->
+                                    ( { game | currentQuestion = Nothing }
+                                    , Random.generate ShuffledQs <|
+                                        shuffleQuestions retry
+                                    )
+
         Answer answer ->
-            giveAnswer answer game
+            giveAnswer answer { game | progress = game.progress + 1 }
 
         Null ->
             ( game, Cmd.none )
@@ -236,14 +241,22 @@ update msg game =
 
                 Sifted all ->
                     ( { game
-                        | questions = Shuffled { all = all, left = qs, retry = [], progress = ( 0, List.length qs ) }
+                        | questions = Shuffled { all = all, left = qs, retry = [], number = List.length qs }
                       }
                     , Random.generate NextQuestions (newPlayingQuestion qs all game.activeQClasses)
                     )
 
                 Shuffled ({ all } as lar) ->
                     ( { game
-                        | questions = Shuffled { lar | left = qs, retry = [], progress = ( 0, List.length qs ) }
+                        | questions =
+                            Shuffled
+                                { lar
+                                    | left = qs
+                                    , retry = []
+                                    , number = List.length qs
+                                }
+                        , score = 0
+                        , progress = 0
                       }
                     , Random.generate NextQuestions (newPlayingQuestion qs all game.activeQClasses)
                     )
@@ -327,7 +340,6 @@ giveUnsure game =
                                 { playingQuestion
                                     | selectedPlace = Just Unsure
                                 }
-                        , score = game.score - 1
                         , questions =
                             case game.questions of
                                 Shuffled lar ->
@@ -354,15 +366,24 @@ giveAnswerPlace answerPlace game =
                 Nothing ->
                     ( { game
                         | currentQuestion = Just { playingQuestion | selectedPlace = Just <| Place answerPlace }
-                        , score =
-                            game.score
-                                + (if answerPlace == playingQuestion.correctPlace then
-                                    1
-
-                                   else
-                                    -1
-                                  )
                       }
+                        |> (\g ->
+                                if answerPlace == playingQuestion.correctPlace then
+                                    { g
+                                        | score = g.score + 1
+                                    }
+
+                                else
+                                    { g
+                                        | questions =
+                                            case game.questions of
+                                                Shuffled lar ->
+                                                    Shuffled { lar | retry = playingQuestion.question :: lar.retry }
+
+                                                _ ->
+                                                    game.questions
+                                    }
+                           )
                     , Process.sleep 500 |> Task.perform (always NeedNewQuestion)
                     )
 
@@ -391,7 +412,11 @@ actionFromKey keyString =
             Answer place
 
         Nothing ->
-            Null
+            if keyString == "q" then
+                Reset
+
+            else
+                Null
 
 
 subscriptions : Game -> Sub Msg
@@ -469,10 +494,13 @@ viewAnswers ( leftOpt, midOpt, rightOpt ) selected =
 
                     UnsureMark ->
                         color yellow
+                , Border.rounded 6
+                , Element.mouseOver [ Background.color hoverGrey ]
+                , padding 10
                 ]
                 (text <| optionText place)
     in
-    column [ size 40, spacing 20, centerX ]
+    column [ size 40, spacing 5, centerX ]
         [ option LeftPlace, option MiddlePlace, option RightPlace ]
 
 
@@ -484,6 +512,10 @@ view g =
 
         QuestionSelect ->
             viewQuestionSelect g
+
+
+hoverGrey =
+    rgb255 214 214 214
 
 
 viewSelector : Category -> (Bool -> Msg) -> Bool -> Element Msg
@@ -514,11 +546,12 @@ textOfQClass qClass =
 viewQuestionSelect : Game -> Html Msg
 viewQuestionSelect game =
     Element.layout [ size 30 ] <|
-        column [ width fill, spacing 50, height shrink, centerY ]
-            [ row [ width fill, spacing 30 ]
-                [ column [ alignLeft, spacing 10, width fill, alignTop ]
-                    [ el [ centerX, width shrink ] (text "Topics")
-                    , column [ centerX, width shrink ] <|
+        column [ width fill, height shrink, centerY, centerX ]
+            [ row [ width fill, spacing 20 ]
+                [ el [ width fill ] Element.none
+                , column [ alignLeft, spacing 20, width fill, alignTop ]
+                    [ el [ centerX, width shrink, Font.bold ] (text "Topics")
+                    , column [ centerX, width shrink, spacing 10 ] <|
                         List.map
                             (\cat ->
                                 viewSelector
@@ -531,9 +564,9 @@ viewQuestionSelect game =
                             )
                             allCats
                     ]
-                , column [ alignRight, spacing 10, width fill, alignTop ]
-                    [ el [ centerX, width shrink ] (text "Question Styles")
-                    , column [ centerX, width shrink ] <|
+                , column [ alignRight, spacing 20, width fill, alignTop ]
+                    [ el [ centerX, width shrink, Font.bold ] (text "Question Styles")
+                    , column [ centerX, width shrink, spacing 10 ] <|
                         List.map
                             (\qClass ->
                                 viewSelector
@@ -546,25 +579,26 @@ viewQuestionSelect game =
                             )
                             allQuestionClasses
                     ]
+                , el [ width fill ] Element.none
                 ]
-            , button
-                [ centerX
-                , size 40
-                , color <|
-                    if game.ready then
-                        rgb 0 0 0
+            , el [ height (20 |> px) ] Element.none
+            , el [ height (40 |> px), centerX ] <|
+                if game.ready then
+                    button
+                        [ size 40
+                        , color <|
+                            rgb 0 0 0
+                        , Background.color (rgb255 90 190 90)
+                        , Element.mouseOver [ Background.color hoverGrey ]
+                        , Border.rounded 4
+                        , padding 5
+                        ]
+                        { onPress = Just Start
+                        , label = text "Start"
+                        }
 
-                    else
-                        rgb 1 0 0
-                ]
-                { onPress =
-                    if game.ready then
-                        Just Start
-
-                    else
-                        Nothing
-                , label = text "Start"
-                }
+                else
+                    Element.none
             ]
 
 
@@ -573,25 +607,24 @@ viewQuiz game =
     Element.layout [] <|
         column [ centerX, width shrink, padding 50, spacing 50, height fill ]
             [ case game.questions of
-                Shuffled { progress } ->
-                    el [ centerX ]
-                        (text <|
-                            "Question "
-                                ++ String.fromInt (Tuple.first progress)
-                                ++ " of "
-                                ++ String.fromInt (Tuple.second progress)
-                                ++ " this round."
-                        )
+                Shuffled { number } ->
+                    column [ centerX, size 30, spacing 5 ]
+                        [ el [ centerX ]
+                            (text <|
+                                String.fromInt game.score
+                                    ++ "/"
+                                    ++ String.fromInt game.progress
+                                    ++ " so far this round"
+                            )
+                        , el [ centerX, size 20 ] <|
+                            text
+                                (String.fromInt (number - game.progress)
+                                    ++ " left"
+                                )
+                        ]
 
                 _ ->
                     Element.none
-            , column
-                [ spacing 5, centerX, height shrink ]
-                [ el [ size 20, centerX ]
-                    (text "Score")
-                , el [ size 40, centerX ]
-                    (text <| String.fromInt game.score)
-                ]
             , column [ spacing 20, centerX ]
                 (case game.currentQuestion of
                     Just cq ->
@@ -617,11 +650,12 @@ viewQuiz game =
                           <|
                             text cq.prompt
                         , viewAnswers cq.options cq.selectedPlace
-                        , button [ centerX ] { onPress = Just (Answer Unsure), label = text "Unsure" }
+                        , button [ Border.rounded 4, centerX, padding 5, Element.mouseOver [ Background.color hoverGrey ] ]
+                            { onPress = Just (Answer Unsure), label = text "Unsure" }
                         ]
 
                     Nothing ->
                         [ Element.none ]
                 )
-            , button [ centerX ] { onPress = Just Start, label = text "Start" }
+            , el [ centerX ] <| text "Press q to return to menu."
             ]
