@@ -5774,6 +5774,54 @@ var $author$project$QuestionStore$greetingQuestions = A2(
 			_Utils_Tuple2('그저 그래요', 'Just so-so'),
 			_Utils_Tuple2('잘 지내요', 'I am doing well')
 		]));
+var $author$project$QuestionStore$instructionQuestions = A2(
+	$elm$core$List$map,
+	function (_v0) {
+		var hanguel = _v0.a;
+		var english = _v0.b;
+		return A3(
+			$author$project$Question$Question,
+			hanguel,
+			$author$project$Question$JustEnglish(english),
+			$elm$core$Set$fromList(
+				_List_fromArray(
+					['Instruction'])));
+	},
+	_List_fromArray(
+		[
+			_Utils_Tuple2('책을 펴세요', 'open your book'),
+			_Utils_Tuple2('책을 덮으세요', 'close your book'),
+			_Utils_Tuple2('칠판을 보세요', 'look at the board'),
+			_Utils_Tuple2('따라하세요', 'repeat after me'),
+			_Utils_Tuple2('잘 들으세요', 'listen up'),
+			_Utils_Tuple2('읽으세요', 'read (aloud)'),
+			_Utils_Tuple2('쓰세요', 'write/do'),
+			_Utils_Tuple2('다시 한 번 말씀해 주세요', 'please say that again'),
+			_Utils_Tuple2('클게 말씀해 주세요', 'please speak loudly'),
+			_Utils_Tuple2('천천히 말씀해 주세요', 'please speak slowly')
+		]));
+var $author$project$QuestionStore$jobQuestions = A2(
+	$elm$core$List$map,
+	function (_v0) {
+		var hanguel = _v0.a;
+		var english = _v0.b;
+		return A3(
+			$author$project$Question$Question,
+			hanguel,
+			$author$project$Question$JustEnglish(english),
+			$elm$core$Set$fromList(
+				_List_fromArray(
+					['Job'])));
+	},
+	_List_fromArray(
+		[
+			_Utils_Tuple2('엔지니어', 'engineer'),
+			_Utils_Tuple2('농부', 'farmer'),
+			_Utils_Tuple2('변호사', 'lawyer'),
+			_Utils_Tuple2('시인', 'poet'),
+			_Utils_Tuple2('정원사', 'gardener'),
+			_Utils_Tuple2('가수', 'singer')
+		]));
 var $author$project$QuestionStore$locationQuestions = A2(
 	$elm$core$List$map,
 	function (_v0) {
@@ -5958,7 +6006,8 @@ var $author$project$QuestionStore$schoolQuestions = A2(
 			_Utils_Tuple2('어떻게', 'how'),
 			_Utils_Tuple2('잘', 'well'),
 			_Utils_Tuple2('재미없어요', 'is uninteresting'),
-			_Utils_Tuple2('열심히', 'diligently')
+			_Utils_Tuple2('열심히', 'diligently'),
+			_Utils_Tuple2('전공해요', 'majors in')
 		]));
 var $author$project$QuestionStore$timeQuestions = A2(
 	$elm$core$List$map,
@@ -6031,7 +6080,7 @@ var $author$project$QuestionStore$verbQuestions = A2(
 		]));
 var $author$project$QuestionStore$allQuestions = $elm$core$List$concat(
 	_List_fromArray(
-		[$author$project$QuestionStore$randomQuestions, $author$project$QuestionStore$locationQuestions, $author$project$QuestionStore$verbQuestions, $author$project$QuestionStore$objectQuestions, $author$project$QuestionStore$schoolQuestions, $author$project$QuestionStore$timeQuestions, $author$project$QuestionStore$greetingQuestions]));
+		[$author$project$QuestionStore$randomQuestions, $author$project$QuestionStore$locationQuestions, $author$project$QuestionStore$verbQuestions, $author$project$QuestionStore$objectQuestions, $author$project$QuestionStore$schoolQuestions, $author$project$QuestionStore$timeQuestions, $author$project$QuestionStore$greetingQuestions, $author$project$QuestionStore$instructionQuestions, $author$project$QuestionStore$jobQuestions]));
 var $elm$core$Dict$filter = F2(
 	function (isGood, dict) {
 		return A3(
