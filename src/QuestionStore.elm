@@ -14,6 +14,8 @@ allQuestions =
         , schoolQuestions
         , timeQuestions
         , greetingQuestions
+        , instructionQuestions
+        , jobQuestions
         ]
 
 
@@ -85,6 +87,17 @@ randomQuestions =
         , ( "맛있다", "ma(t)-i(t)-ta" )
         , ( "찌게", "cchi-gae" )
         , ( "이데일리", "i-tae-il-li" )
+        ]
+
+
+jobQuestions =
+    List.map (\( hanguel, english ) -> Question hanguel (JustEnglish english) (Set.fromList [ "Job" ]))
+        [ ( "엔지니어", "engineer" )
+        , ( "농부", "farmer" )
+        , ( "변호사", "lawyer" )
+        , ( "시인", "poet" )
+        , ( "정원사", "gardener" )
+        , ( "가수", "singer" )
         ]
 
 
@@ -189,6 +202,7 @@ schoolQuestions =
         , ( "잘", "well" )
         , ( "재미없어요", "is uninteresting" )
         , ( "열심히", "diligently" )
+        , ( "전공해요", "majors in" )
         ]
 
 
@@ -209,4 +223,19 @@ greetingQuestions =
         , ( "바빠요", "I am busy" )
         , ( "그저 그래요", "Just so-so" )
         , ( "잘 지내요", "I am doing well" )
+        ]
+
+
+instructionQuestions =
+    List.map (\( hanguel, english ) -> Question hanguel (JustEnglish english) (Set.fromList [ "Instruction" ]))
+        [ ( "책을 펴세요", "open your book" )
+        , ( "책을 덮으세요", "close your book" )
+        , ( "칠판을 보세요", "look at the board" )
+        , ( "따라하세요", "repeat after me" )
+        , ( "잘 들으세요", "listen up" )
+        , ( "읽으세요", "read (aloud)" )
+        , ( "쓰세요", "write/do" )
+        , ( "다시 한 번 말씀해 주세요", "please say that again" )
+        , ( "클게 말씀해 주세요", "please speak loudly" )
+        , ( "천천히 말씀해 주세요", "please speak slowly" )
         ]
