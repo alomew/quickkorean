@@ -16,6 +16,10 @@ allQuestions =
         , greetingQuestions
         , instructionQuestions
         , jobQuestions
+        , natNumQuestions
+        , idCounterQuestions
+        , accCounterQuestions
+        , familyQuestions
         ]
 
 
@@ -98,6 +102,12 @@ jobQuestions =
         , ( "시인", "poet" )
         , ( "정원사", "gardener" )
         , ( "가수", "singer" )
+        , ( "고등학생", "high school student" )
+        , ( "대학생", "university student" )
+        , ( "대학원생", "graduate student" )
+        , ( "학생", "student" )
+        , ( "초듷학생", "primary school student" )
+        , ( "중학생", "middle school student" )
         ]
 
 
@@ -238,4 +248,58 @@ instructionQuestions =
         , ( "다시 한 번 말씀해 주세요", "please say that again" )
         , ( "클게 말씀해 주세요", "please speak loudly" )
         , ( "천천히 말씀해 주세요", "please speak slowly" )
+        ]
+
+
+natNumQuestions =
+    List.map (\( hanguel, english ) -> Question hanguel (JustEnglish ("native " ++ english)) (Set.fromList [ "Native Number" ]))
+        [ ( "하나", "1" )
+        , ( "둘", "2" )
+        , ( "셋", "3" )
+        , ( "넷", "4" )
+        , ( "다섯", "5" )
+        , ( "여섯", "6" )
+        , ( "일곱", "7" )
+        , ( "여덟", "8" )
+        , ( "아홉", "9" )
+        , ( "열", "10" )
+        ]
+
+
+accCounterQuestions =
+    List.map (\( hanguel, english ) -> Question hanguel (JustEnglish ("acc " ++ english)) (Set.fromList [ "Counter" ]))
+        [ ( "명", "people" )
+        , ( "마리", "animals" )
+        , ( "개", "items" )
+        , ( "권", "volumes (e.g. of books)" )
+        , ( "[native] 과", "lessons" )
+        , ( "시간", "hours" )
+        , ( "달", "months" )
+        ]
+
+
+idCounterQuestions =
+    List.map (\( hanguel, english ) -> Question hanguel (JustEnglish ("id " ++ english)) (Set.fromList [ "Counter" ]))
+        [ ( "층", "floor, layer" )
+        , ( "[sino] 과", "lesson" )
+        , ( "원", "won, ie. currency" )
+        , ( "학년", "school year" )
+        , ( "년", "year" )
+        , ( "월", "month" )
+        , ( "[sino] 일", "day" )
+        ]
+
+
+familyQuestions =
+    List.map (\( hanguel, english ) -> Question hanguel (JustEnglish english) (Set.fromList [ "Family" ]))
+        [ ( "남동생", "younger brother" )
+        , ( "여동생", "younger sister" )
+        , ( "동생", "younger sibling" )
+        , ( "오빠", "girl's older brother" )
+        , ( "형", "boy's older brother" )
+        , ( "누나", "boy's older sister" )
+        , ( "언니", "girl's older sister" )
+        , ( "부모님", "parents" )
+        , ( "아버지", "father" )
+        , ( "어머니", "mother" )
         ]

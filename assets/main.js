@@ -5727,17 +5727,6 @@ var $author$project$Main$ShuffledQs = function (a) {
 var $author$project$Main$Sifted = function (a) {
 	return {$: 'Sifted', a: a};
 };
-var $elm$core$List$append = F2(
-	function (xs, ys) {
-		if (!ys.b) {
-			return xs;
-		} else {
-			return A3($elm$core$List$foldr, $elm$core$List$cons, ys, xs);
-		}
-	});
-var $elm$core$List$concat = function (lists) {
-	return A3($elm$core$List$foldr, $elm$core$List$append, _List_Nil, lists);
-};
 var $author$project$Question$JustEnglish = function (a) {
 	return {$: 'JustEnglish', a: a};
 };
@@ -5754,6 +5743,66 @@ var $elm$core$Set$insert = F2(
 var $elm$core$Set$fromList = function (list) {
 	return A3($elm$core$List$foldl, $elm$core$Set$insert, $elm$core$Set$empty, list);
 };
+var $author$project$QuestionStore$accCounterQuestions = A2(
+	$elm$core$List$map,
+	function (_v0) {
+		var hanguel = _v0.a;
+		var english = _v0.b;
+		return A3(
+			$author$project$Question$Question,
+			hanguel,
+			$author$project$Question$JustEnglish('acc ' + english),
+			$elm$core$Set$fromList(
+				_List_fromArray(
+					['Counter'])));
+	},
+	_List_fromArray(
+		[
+			_Utils_Tuple2('명', 'people'),
+			_Utils_Tuple2('마리', 'animals'),
+			_Utils_Tuple2('개', 'items'),
+			_Utils_Tuple2('권', 'volumes (e.g. of books)'),
+			_Utils_Tuple2('[native] 과', 'lessons'),
+			_Utils_Tuple2('시간', 'hours'),
+			_Utils_Tuple2('달', 'months')
+		]));
+var $elm$core$List$append = F2(
+	function (xs, ys) {
+		if (!ys.b) {
+			return xs;
+		} else {
+			return A3($elm$core$List$foldr, $elm$core$List$cons, ys, xs);
+		}
+	});
+var $elm$core$List$concat = function (lists) {
+	return A3($elm$core$List$foldr, $elm$core$List$append, _List_Nil, lists);
+};
+var $author$project$QuestionStore$familyQuestions = A2(
+	$elm$core$List$map,
+	function (_v0) {
+		var hanguel = _v0.a;
+		var english = _v0.b;
+		return A3(
+			$author$project$Question$Question,
+			hanguel,
+			$author$project$Question$JustEnglish(english),
+			$elm$core$Set$fromList(
+				_List_fromArray(
+					['Family'])));
+	},
+	_List_fromArray(
+		[
+			_Utils_Tuple2('남동생', 'younger brother'),
+			_Utils_Tuple2('여동생', 'younger sister'),
+			_Utils_Tuple2('동생', 'younger sibling'),
+			_Utils_Tuple2('오빠', 'girl\'s older brother'),
+			_Utils_Tuple2('형', 'boy\'s older brother'),
+			_Utils_Tuple2('누나', 'boy\'s older sister'),
+			_Utils_Tuple2('언니', 'girl\'s older sister'),
+			_Utils_Tuple2('부모님', 'parents'),
+			_Utils_Tuple2('아버지', 'father'),
+			_Utils_Tuple2('어머니', 'mother')
+		]));
 var $author$project$QuestionStore$greetingQuestions = A2(
 	$elm$core$List$map,
 	function (_v0) {
@@ -5773,6 +5822,29 @@ var $author$project$QuestionStore$greetingQuestions = A2(
 			_Utils_Tuple2('바빠요', 'I am busy'),
 			_Utils_Tuple2('그저 그래요', 'Just so-so'),
 			_Utils_Tuple2('잘 지내요', 'I am doing well')
+		]));
+var $author$project$QuestionStore$idCounterQuestions = A2(
+	$elm$core$List$map,
+	function (_v0) {
+		var hanguel = _v0.a;
+		var english = _v0.b;
+		return A3(
+			$author$project$Question$Question,
+			hanguel,
+			$author$project$Question$JustEnglish('id ' + english),
+			$elm$core$Set$fromList(
+				_List_fromArray(
+					['Counter'])));
+	},
+	_List_fromArray(
+		[
+			_Utils_Tuple2('층', 'floor, layer'),
+			_Utils_Tuple2('[sino] 과', 'lesson'),
+			_Utils_Tuple2('원', 'won, ie. currency'),
+			_Utils_Tuple2('학년', 'school year'),
+			_Utils_Tuple2('년', 'year'),
+			_Utils_Tuple2('월', 'month'),
+			_Utils_Tuple2('[sino] 일', 'day')
 		]));
 var $author$project$QuestionStore$instructionQuestions = A2(
 	$elm$core$List$map,
@@ -5820,7 +5892,13 @@ var $author$project$QuestionStore$jobQuestions = A2(
 			_Utils_Tuple2('변호사', 'lawyer'),
 			_Utils_Tuple2('시인', 'poet'),
 			_Utils_Tuple2('정원사', 'gardener'),
-			_Utils_Tuple2('가수', 'singer')
+			_Utils_Tuple2('가수', 'singer'),
+			_Utils_Tuple2('고등학생', 'high school student'),
+			_Utils_Tuple2('대학생', 'university student'),
+			_Utils_Tuple2('대학원생', 'graduate student'),
+			_Utils_Tuple2('학생', 'student'),
+			_Utils_Tuple2('초듷학생', 'primary school student'),
+			_Utils_Tuple2('중학생', 'middle school student')
 		]));
 var $author$project$QuestionStore$locationQuestions = A2(
 	$elm$core$List$map,
@@ -5854,6 +5932,32 @@ var $author$project$QuestionStore$locationQuestions = A2(
 			_Utils_Tuple2('학생회관', 'student centre'),
 			_Utils_Tuple2('캠퍼스', 'campus'),
 			_Utils_Tuple2('층', 'storey')
+		]));
+var $author$project$QuestionStore$natNumQuestions = A2(
+	$elm$core$List$map,
+	function (_v0) {
+		var hanguel = _v0.a;
+		var english = _v0.b;
+		return A3(
+			$author$project$Question$Question,
+			hanguel,
+			$author$project$Question$JustEnglish('native ' + english),
+			$elm$core$Set$fromList(
+				_List_fromArray(
+					['Native Number'])));
+	},
+	_List_fromArray(
+		[
+			_Utils_Tuple2('하나', '1'),
+			_Utils_Tuple2('둘', '2'),
+			_Utils_Tuple2('셋', '3'),
+			_Utils_Tuple2('넷', '4'),
+			_Utils_Tuple2('다섯', '5'),
+			_Utils_Tuple2('여섯', '6'),
+			_Utils_Tuple2('일곱', '7'),
+			_Utils_Tuple2('여덟', '8'),
+			_Utils_Tuple2('아홉', '9'),
+			_Utils_Tuple2('열', '10')
 		]));
 var $author$project$QuestionStore$objectQuestions = A2(
 	$elm$core$List$map,
@@ -6080,7 +6184,7 @@ var $author$project$QuestionStore$verbQuestions = A2(
 		]));
 var $author$project$QuestionStore$allQuestions = $elm$core$List$concat(
 	_List_fromArray(
-		[$author$project$QuestionStore$randomQuestions, $author$project$QuestionStore$locationQuestions, $author$project$QuestionStore$verbQuestions, $author$project$QuestionStore$objectQuestions, $author$project$QuestionStore$schoolQuestions, $author$project$QuestionStore$timeQuestions, $author$project$QuestionStore$greetingQuestions, $author$project$QuestionStore$instructionQuestions, $author$project$QuestionStore$jobQuestions]));
+		[$author$project$QuestionStore$randomQuestions, $author$project$QuestionStore$locationQuestions, $author$project$QuestionStore$verbQuestions, $author$project$QuestionStore$objectQuestions, $author$project$QuestionStore$schoolQuestions, $author$project$QuestionStore$timeQuestions, $author$project$QuestionStore$greetingQuestions, $author$project$QuestionStore$instructionQuestions, $author$project$QuestionStore$jobQuestions, $author$project$QuestionStore$natNumQuestions, $author$project$QuestionStore$idCounterQuestions, $author$project$QuestionStore$accCounterQuestions, $author$project$QuestionStore$familyQuestions]));
 var $elm$core$Dict$filter = F2(
 	function (isGood, dict) {
 		return A3(
