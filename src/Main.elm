@@ -12,6 +12,7 @@ import Html exposing (Html)
 import Json.Decode as Decode
 import List.Extra
 import Maybe exposing (Maybe)
+import Numbers
 import Process
 import Question exposing (..)
 import QuestionStore exposing (allQuestions)
@@ -38,22 +39,28 @@ main =
 -- Model
 
 
-type Screen
-    = QuestionSelect
-    | Quiz
-
-
-type alias Game =
-    { score : Int
-    , currentQuestion :
-        Maybe PlayingQuestion
-    , questions : QuestionsInWaiting
+type alias QuizState =
+    { questions : QuestionsInWaiting
     , activeQClasses : List QuestionClass
     , activeCats : Set Category
-    , screen : Screen
-    , ready : Bool
+    , currentQuestion :
+        Maybe PlayingQuestion
+    , score : Int
     , progress : Int
     }
+
+
+type alias SelectionData =
+    { activeQClasses : List QuestionClass
+    , activeCats : Set Category
+    , questions : List Question
+    }
+
+
+type Game
+    = QuestionSelect SelectionData
+    | Quiz QuizState
+    | Numbers Numbers.State
 
 
 allCats : List Category
@@ -62,8 +69,7 @@ allCats =
 
 
 type QuestionsInWaiting
-    = Purgatory
-    | Sifted (List Question)
+    = Sifted (List Question)
     | Shuffled
         { left : List Question
         , all : List Question
@@ -94,29 +100,25 @@ readyToStart qs =
     weHathAQuestion && everyQClassHappy
 
 
-resettedState : Game
-resettedState =
-    { score = 0
-    , currentQuestion = Nothing
-    , questions = Purgatory
-    , activeQClasses = [ Question.KorToEng, Question.EngToKor ]
-    , activeCats = Set.empty
-    , screen = QuestionSelect
-    , ready = False
-    , progress = 0
-    }
+resettedGame : Game
+resettedGame =
+    QuestionSelect
+        { activeQClasses = [ Question.KorToEng, Question.EngToKor ]
+        , activeCats = Set.empty
+        , questions = []
+        }
 
 
 init : () -> ( Game, Cmd Msg )
 init _ =
-    ( resettedState
+    ( resettedGame
     , Cmd.none
     )
 
 
-siftQuestions : Game -> List Question
-siftQuestions g =
-    compatibleQuestions g.activeQClasses g.activeCats allQuestions
+siftQuestions : List QuestionClass -> Set Category -> List Question
+siftQuestions qClasses cats =
+    compatibleQuestions qClasses cats allQuestions
 
 
 type QuestionOption
@@ -137,253 +139,306 @@ type Msg
     | ShuffledQs (List Question)
     | ToggledOption QuestionOption Bool
     | Reset
+    | NumberMsg Numbers.Msg
+    | StartNumbers
 
 
 update : Msg -> Game -> ( Game, Cmd Msg )
 update msg game =
     case msg of
         Reset ->
-            ( resettedState, Cmd.none )
+            ( resettedGame, Cmd.none )
 
         NextQuestions a ->
-            case a of
-                Just ( nextQuestion, remainingQuestions ) ->
-                    ( { game
-                        | currentQuestion = Just nextQuestion
-                        , questions =
-                            case game.questions of
-                                Purgatory ->
-                                    Purgatory
+            case game of
+                Quiz quizState ->
+                    case a of
+                        Just ( nextQuestion, remainingQuestions ) ->
+                            ( Quiz
+                                { quizState
+                                    | currentQuestion = Just nextQuestion
+                                    , questions =
+                                        case quizState.questions of
+                                            Sifted allQs ->
+                                                Shuffled
+                                                    { left = remainingQuestions
+                                                    , all = allQs
+                                                    , retry = []
+                                                    , number = List.length remainingQuestions
+                                                    }
 
-                                Sifted allQs ->
-                                    Shuffled
-                                        { left = remainingQuestions
-                                        , all = allQs
-                                        , retry = []
-                                        , number = List.length remainingQuestions
-                                        }
-
-                                Shuffled qs ->
-                                    Shuffled
-                                        { qs
-                                            | left = remainingQuestions
-                                        }
-                      }
-                    , Cmd.none
-                    )
-
-                Nothing ->
-                    case game.questions of
-                        Purgatory ->
-                            ( game, Cmd.none )
-
-                        Sifted allQs ->
-                            ( { game | currentQuestion = Nothing }
-                            , Random.generate ShuffledQs <|
-                                shuffleQuestions allQs
+                                            Shuffled qs ->
+                                                Shuffled
+                                                    { qs
+                                                        | left = remainingQuestions
+                                                    }
+                                }
+                            , Cmd.none
                             )
 
-                        Shuffled { retry } ->
-                            case retry of
-                                [] ->
-                                    ( resettedState
-                                    , Cmd.none
+                        Nothing ->
+                            case quizState.questions of
+                                Sifted allQs ->
+                                    ( Quiz { quizState | currentQuestion = Nothing }
+                                    , Random.generate ShuffledQs <|
+                                        shuffleQuestions allQs
                                     )
 
-                                _ ->
-                                    ( { game | currentQuestion = Nothing }
-                                    , Random.generate ShuffledQs <|
-                                        shuffleQuestions retry
-                                    )
+                                Shuffled { retry } ->
+                                    case retry of
+                                        [] ->
+                                            ( resettedGame
+                                            , Cmd.none
+                                            )
+
+                                        _ ->
+                                            ( Quiz { quizState | currentQuestion = Nothing }
+                                            , Random.generate ShuffledQs <|
+                                                shuffleQuestions retry
+                                            )
+
+                _ ->
+                    ( game, Cmd.none )
 
         Answer answer ->
-            giveAnswer answer { game | progress = game.progress + 1 }
+            case game of
+                Quiz quiz ->
+                    giveAnswer answer { quiz | progress = quiz.progress + 1 }
+
+                _ ->
+                    ( game, Cmd.none )
 
         Null ->
             ( game, Cmd.none )
 
         NeedNewQuestion ->
-            ( game
-            , case game.questions of
-                Shuffled { left, all } ->
-                    Random.generate NextQuestions
-                        (newPlayingQuestion
-                            left
-                            all
-                            game.activeQClasses
-                        )
+            case game of
+                Quiz quiz ->
+                    ( Quiz quiz
+                    , case quiz.questions of
+                        Shuffled { left, all } ->
+                            Random.generate NextQuestions
+                                (newPlayingQuestion
+                                    left
+                                    all
+                                    quiz.activeQClasses
+                                )
+
+                        _ ->
+                            Cmd.none
+                    )
 
                 _ ->
-                    Cmd.none
-            )
+                    ( game, Cmd.none )
 
         Start ->
-            case game.questions of
-                Purgatory ->
-                    ( game, Cmd.none )
-
-                Shuffled _ ->
-                    ( game, Cmd.none )
-
-                Sifted sifted ->
-                    if readyToStart sifted then
-                        ( { game | screen = Quiz }
-                        , Random.generate ShuffledQs <| shuffleQuestions sifted
+            case game of
+                QuestionSelect ({ questions } as selections) ->
+                    if readyToStart questions then
+                        ( Quiz
+                            { questions = Sifted questions
+                            , currentQuestion = Nothing
+                            , score = 0
+                            , progress = 0
+                            , activeQClasses = selections.activeQClasses
+                            , activeCats = selections.activeCats
+                            }
+                        , Random.generate ShuffledQs <| shuffleQuestions questions
                         )
 
                     else
                         ( game, Cmd.none )
 
-        ShuffledQs qs ->
-            case game.questions of
-                Purgatory ->
+                _ ->
                     ( game, Cmd.none )
 
-                Sifted all ->
-                    ( { game
-                        | questions = Shuffled { all = all, left = qs, retry = [], number = List.length qs }
-                      }
-                    , Random.generate NextQuestions (newPlayingQuestion qs all game.activeQClasses)
-                    )
-
-                Shuffled ({ all } as lar) ->
-                    ( { game
-                        | questions =
-                            Shuffled
-                                { lar
-                                    | left = qs
-                                    , retry = []
-                                    , number = List.length qs
+        ShuffledQs qs ->
+            case game of
+                Quiz quizState ->
+                    case quizState.questions of
+                        Sifted all ->
+                            ( Quiz
+                                { quizState
+                                    | questions = Shuffled { all = all, left = qs, retry = [], number = List.length qs }
                                 }
-                        , score = 0
-                        , progress = 0
-                      }
-                    , Random.generate NextQuestions (newPlayingQuestion qs all game.activeQClasses)
-                    )
+                            , Random.generate NextQuestions (newPlayingQuestion qs all quizState.activeQClasses)
+                            )
+
+                        Shuffled ({ all } as lar) ->
+                            ( Quiz
+                                { quizState
+                                    | questions =
+                                        Shuffled
+                                            { lar
+                                                | left = qs
+                                                , retry = []
+                                                , number = List.length qs
+                                            }
+                                    , score = 0
+                                    , progress = 0
+                                }
+                            , Random.generate NextQuestions (newPlayingQuestion qs all quizState.activeQClasses)
+                            )
+
+                _ ->
+                    ( game, Cmd.none )
 
         ToggledOption option toInsert ->
-            case option of
-                Category cat ->
+            case game of
+                QuestionSelect selections ->
+                    case option of
+                        Category cat ->
+                            let
+                                currentCats =
+                                    if toInsert then
+                                        Set.insert cat selections.activeCats
+
+                                    else
+                                        Set.remove cat selections.activeCats
+
+                                questions =
+                                    compatibleQuestions
+                                        selections.activeQClasses
+                                        currentCats
+                                        allQuestions
+                            in
+                            ( QuestionSelect
+                                { selections
+                                    | activeCats = currentCats
+                                    , questions =
+                                        questions
+                                }
+                            , Cmd.none
+                            )
+
+                        Direction d ->
+                            let
+                                currentQClasses =
+                                    if toInsert then
+                                        d :: selections.activeQClasses
+
+                                    else
+                                        List.Extra.remove d selections.activeQClasses
+
+                                questions =
+                                    compatibleQuestions
+                                        currentQClasses
+                                        selections.activeCats
+                                        allQuestions
+                            in
+                            ( QuestionSelect
+                                { selections
+                                    | activeQClasses = currentQClasses
+                                    , questions =
+                                        questions
+                                }
+                            , Cmd.none
+                            )
+
+                _ ->
+                    ( game, Cmd.none )
+
+        NumberMsg nMsg ->
+            case game of
+                Numbers nState ->
                     let
-                        currentCats =
-                            if toInsert then
-                                Set.insert cat game.activeCats
-
-                            else
-                                Set.remove cat game.activeCats
-
-                        questions =
-                            compatibleQuestions
-                                game.activeQClasses
-                                currentCats
-                                allQuestions
+                        ( newNState, newNCmd ) =
+                            Numbers.update nMsg nState
                     in
-                    ( { game
-                        | activeCats = currentCats
-                        , questions =
-                            Sifted <| questions
-                        , ready = readyToStart questions
-                      }
+                    ( Numbers newNState
+                    , Cmd.map NumberMsg newNCmd
+                    )
+
+                _ ->
+                    ( game
                     , Cmd.none
                     )
 
-                Direction d ->
-                    let
-                        currentQClasses =
-                            if toInsert then
-                                d :: game.activeQClasses
-
-                            else
-                                List.Extra.remove d game.activeQClasses
-
-                        questions =
-                            compatibleQuestions
-                                currentQClasses
-                                game.activeCats
-                                allQuestions
-                    in
-                    ( { game
-                        | activeQClasses = currentQClasses
-                        , questions =
-                            Sifted <| questions
-                        , ready = readyToStart questions
-                      }
-                    , Cmd.none
-                    )
+        StartNumbers ->
+            let
+                ( nState, nCmd ) =
+                    Numbers.initStateCmd
+            in
+            ( Numbers nState
+            , Cmd.map NumberMsg nCmd
+            )
 
 
-giveAnswer : GivenAnswer -> Game -> ( Game, Cmd Msg )
-giveAnswer answer game =
+giveAnswer : GivenAnswer -> QuizState -> ( Game, Cmd Msg )
+giveAnswer answer quiz =
     case answer of
         Place answerPlace ->
-            giveAnswerPlace answerPlace game
+            giveAnswerPlace answerPlace quiz
 
         Unsure ->
-            giveUnsure game
+            giveUnsure quiz
 
 
-giveUnsure : Game -> ( Game, Cmd Msg )
-giveUnsure game =
-    case game.currentQuestion of
+giveUnsure : QuizState -> ( Game, Cmd Msg )
+giveUnsure quiz =
+    case quiz.currentQuestion of
         Nothing ->
-            ( game, Cmd.none )
+            ( Quiz quiz, Cmd.none )
 
         Just playingQuestion ->
             case playingQuestion.selectedPlace of
                 Just _ ->
-                    ( game, Cmd.none )
+                    ( Quiz quiz, Cmd.none )
 
                 Nothing ->
-                    ( { game
-                        | currentQuestion =
-                            Just
-                                { playingQuestion
-                                    | selectedPlace = Just Unsure
-                                }
-                        , questions =
-                            case game.questions of
-                                Shuffled lar ->
-                                    Shuffled { lar | retry = playingQuestion.question :: lar.retry }
+                    ( Quiz
+                        { quiz
+                            | currentQuestion =
+                                Just
+                                    { playingQuestion
+                                        | selectedPlace = Just Unsure
+                                    }
+                            , questions =
+                                case quiz.questions of
+                                    Shuffled lar ->
+                                        Shuffled { lar | retry = playingQuestion.question :: lar.retry }
 
-                                _ ->
-                                    game.questions
-                      }
+                                    _ ->
+                                        quiz.questions
+                        }
                     , Process.sleep 500 |> Task.perform (always NeedNewQuestion)
                     )
 
 
-giveAnswerPlace : AnswerPlace -> Game -> ( Game, Cmd Msg )
-giveAnswerPlace answerPlace game =
-    case game.currentQuestion of
+giveAnswerPlace : AnswerPlace -> QuizState -> ( Game, Cmd Msg )
+giveAnswerPlace answerPlace quiz =
+    case quiz.currentQuestion of
         Nothing ->
-            ( game, Cmd.none )
+            ( Quiz quiz, Cmd.none )
 
         Just playingQuestion ->
             case playingQuestion.selectedPlace of
                 Just _ ->
-                    ( game, Cmd.none )
+                    ( Quiz quiz, Cmd.none )
 
                 Nothing ->
-                    ( { game
-                        | currentQuestion = Just { playingQuestion | selectedPlace = Just <| Place answerPlace }
-                      }
-                        |> (\g ->
-                                if answerPlace == playingQuestion.correctPlace then
-                                    { g
-                                        | score = g.score + 1
-                                    }
+                    ( Quiz
+                        ({ quiz
+                            | currentQuestion = Just { playingQuestion | selectedPlace = Just <| Place answerPlace }
+                         }
+                            |> (\q ->
+                                    if answerPlace == playingQuestion.correctPlace then
+                                        { q
+                                            | score = q.score + 1
+                                        }
 
-                                else
-                                    { g
-                                        | questions =
-                                            case game.questions of
-                                                Shuffled lar ->
-                                                    Shuffled { lar | retry = playingQuestion.question :: lar.retry }
+                                    else
+                                        { q
+                                            | questions =
+                                                case quiz.questions of
+                                                    Shuffled lar ->
+                                                        Shuffled { lar | retry = playingQuestion.question :: lar.retry }
 
-                                                _ ->
-                                                    game.questions
-                                    }
-                           )
+                                                    _ ->
+                                                        quiz.questions
+                                        }
+                               )
+                        )
                     , Process.sleep 500 |> Task.perform (always NeedNewQuestion)
                     )
 
@@ -505,13 +560,16 @@ viewAnswers ( leftOpt, midOpt, rightOpt ) selected =
 
 
 view : Game -> Html Msg
-view g =
-    case g.screen of
-        Quiz ->
-            viewQuiz g
+view game =
+    case game of
+        Quiz quizState ->
+            viewQuiz quizState
 
-        QuestionSelect ->
-            viewQuestionSelect g
+        QuestionSelect selections ->
+            viewQuestionSelect selections
+
+        Numbers nState ->
+            Numbers.view NumberMsg nState
 
 
 hoverGrey =
@@ -543,10 +601,10 @@ textOfQClass qClass =
             "Pronunciation of Hangeul"
 
 
-viewQuestionSelect : Game -> Html Msg
-viewQuestionSelect game =
+viewQuestionSelect : SelectionData -> Html Msg
+viewQuestionSelect selections =
     Element.layout [ size 30 ] <|
-        column [ width fill, height shrink, centerY, centerX ]
+        column [ width fill, height shrink, centerY, centerX, spacing 10 ]
             [ row [ width fill, spacing 20 ]
                 [ el [ width fill ] Element.none
                 , column [ alignLeft, spacing 20, width fill, alignTop ]
@@ -559,7 +617,7 @@ viewQuestionSelect game =
                                     (ToggledOption (Category cat))
                                     (Set.member
                                         cat
-                                        game.activeCats
+                                        selections.activeCats
                                     )
                             )
                             allCats
@@ -574,7 +632,7 @@ viewQuestionSelect game =
                                     (ToggledOption (Direction qClass))
                                     (List.member
                                         qClass
-                                        game.activeQClasses
+                                        selections.activeQClasses
                                     )
                             )
                             allQuestionClasses
@@ -582,27 +640,57 @@ viewQuestionSelect game =
                 , el [ width fill ] Element.none
                 ]
             , el [ height (20 |> px) ] Element.none
-            , el [ height (40 |> px), centerX ] <|
-                if game.ready then
-                    button
-                        [ size 40
-                        , color <|
-                            rgb 0 0 0
-                        , Background.color (rgb255 90 190 90)
-                        , Element.mouseOver [ Background.color hoverGrey ]
-                        , Border.rounded 4
-                        , padding 5
-                        ]
-                        { onPress = Just Start
-                        , label = text "Start"
+            , el [ height (40 |> px), centerX, padding 10 ] <|
+                let
+                    readyProps =
+                        { textColor = color <| rgb 0 0 0
+                        , bgColor = rgb255 90 190 90
+                        , onHover = [ Background.color hoverGrey ]
+                        , onPress = Just Start
                         }
 
-                else
-                    Element.none
+                    notReadyProps =
+                        { textColor = color <| rgb 1 1 1
+                        , bgColor = rgb255 255 76 48
+                        , onHover = []
+                        , onPress = Nothing
+                        }
+
+                    props =
+                        if readyToStart selections.questions then
+                            readyProps
+
+                        else
+                            notReadyProps
+                in
+                button
+                    [ size 40
+                    , props.textColor
+                    , Background.color props.bgColor
+                    , Element.mouseOver props.onHover
+                    , Border.rounded 4
+                    , padding 5
+                    ]
+                    { onPress = props.onPress
+                    , label = text "Quiz"
+                    }
+            , el [ centerX, padding 30 ] <|
+                button
+                    [ size 40
+                    , color <|
+                        rgb 0 0 0
+                    , Background.color (rgb255 90 190 90)
+                    , Element.mouseOver [ Background.color hoverGrey ]
+                    , Border.rounded 4
+                    , padding 5
+                    ]
+                    { onPress = Just <| StartNumbers
+                    , label = text "Numbers"
+                    }
             ]
 
 
-viewQuiz : Game -> Html Msg
+viewQuiz : QuizState -> Html Msg
 viewQuiz game =
     Element.layout [] <|
         column [ centerX, width shrink, padding 50, spacing 50, height fill ]
