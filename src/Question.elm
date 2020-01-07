@@ -253,3 +253,8 @@ chooseQClass question qClasses =
 
         Just ( one, others ) ->
             Random.uniform one others |> Random.map Just
+
+
+removeSelection : PlayingQuestion -> PlayingQuestion
+removeSelection playingQuestion =
+    { playingQuestion | selectedPlace = Nothing }

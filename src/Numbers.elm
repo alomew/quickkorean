@@ -20,7 +20,7 @@ main =
         { init = \_ -> initStateCmd
         , update = update
         , subscriptions = \_ -> Sub.none
-        , view = view identity
+        , view = view
         }
 
 
@@ -216,8 +216,8 @@ onEnter msg =
         )
 
 
-view : (Msg -> a) -> State -> Html a
-view wrapper state =
+view : State -> Html Msg
+view state =
     Element.layout [] <|
         case state.currentNumber of
             Just ( _, nInSino ) ->
@@ -232,10 +232,10 @@ view wrapper state =
                     [ el [ centerX, padding 100 ] (Element.text nInSino)
                     , Input.text
                         [ Element.htmlAttribute <| Attr.autofocus True
-                        , onEnter (wrapper SubmittedAnswer)
+                        , onEnter SubmittedAnswer
                         , Font.size 50
                         ]
-                        { onChange = \s -> wrapper (UpdatedInput s)
+                        { onChange = \s -> UpdatedInput s
                         , text = state.currentInput
                         , placeholder = Nothing
                         , label = Input.labelHidden "Answer"

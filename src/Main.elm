@@ -2,6 +2,7 @@ module Main exposing (..)
 
 import Browser
 import Browser.Events
+import Consolidate as Con
 import Element exposing (Element, alignLeft, alignRight, alignTop, centerX, centerY, column, el, fill, height, padding, paddingEach, pointer, px, rgb, rgb255, row, shrink, spacing, text, width)
 import Element.Background as Background
 import Element.Border as Border
@@ -39,7 +40,12 @@ main =
 -- Model
 
 
-type alias QuizState =
+type QuizState
+    = FirstRound FirstRoundState
+    | Consolidate Con.State
+
+
+type alias FirstRoundState =
     { questions : QuestionsInWaiting
     , activeQClasses : List QuestionClass
     , activeCats : Set Category
@@ -141,6 +147,7 @@ type Msg
     | Reset
     | NumberMsg Numbers.Msg
     | StartNumbers
+    | ConsolidateMsg Con.Msg
 
 
 update : Msg -> Game -> ( Game, Cmd Msg )
@@ -151,40 +158,41 @@ update msg game =
 
         NextQuestions a ->
             case game of
-                Quiz quizState ->
+                Quiz (FirstRound quizState) ->
                     case a of
                         Just ( nextQuestion, remainingQuestions ) ->
-                            ( Quiz
-                                { quizState
-                                    | currentQuestion = Just nextQuestion
-                                    , questions =
-                                        case quizState.questions of
-                                            Sifted allQs ->
-                                                Shuffled
-                                                    { left = remainingQuestions
-                                                    , all = allQs
-                                                    , retry = []
-                                                    , number = List.length remainingQuestions
-                                                    }
+                            ( Quiz <|
+                                FirstRound
+                                    { quizState
+                                        | currentQuestion = Just nextQuestion
+                                        , questions =
+                                            case quizState.questions of
+                                                Sifted allQs ->
+                                                    Shuffled
+                                                        { left = remainingQuestions
+                                                        , all = allQs
+                                                        , retry = []
+                                                        , number = List.length remainingQuestions
+                                                        }
 
-                                            Shuffled qs ->
-                                                Shuffled
-                                                    { qs
-                                                        | left = remainingQuestions
-                                                    }
-                                }
+                                                Shuffled qs ->
+                                                    Shuffled
+                                                        { qs
+                                                            | left = remainingQuestions
+                                                        }
+                                    }
                             , Cmd.none
                             )
 
                         Nothing ->
                             case quizState.questions of
                                 Sifted allQs ->
-                                    ( Quiz { quizState | currentQuestion = Nothing }
+                                    ( Quiz <| FirstRound { quizState | currentQuestion = Nothing }
                                     , Random.generate ShuffledQs <|
                                         shuffleQuestions allQs
                                     )
 
-                                Shuffled { retry } ->
+                                Shuffled { retry, all } ->
                                     case retry of
                                         [] ->
                                             ( resettedGame
@@ -192,9 +200,15 @@ update msg game =
                                             )
 
                                         _ ->
-                                            ( Quiz { quizState | currentQuestion = Nothing }
-                                            , Random.generate ShuffledQs <|
-                                                shuffleQuestions retry
+                                            ( Quiz <|
+                                                Consolidate
+                                                    { currentQuestion = Nothing
+                                                    , comingQuestions = Con.ReminderQs <| Con.setupReminders retry quizState.activeQClasses
+                                                    , allQs = all
+                                                    , activeQClasses = quizState.activeQClasses
+                                                    , numLeft = 0
+                                                    }
+                                            , Cmd.map ConsolidateMsg <| Con.setupRetests retry
                                             )
 
                 _ ->
@@ -202,7 +216,7 @@ update msg game =
 
         Answer answer ->
             case game of
-                Quiz quiz ->
+                Quiz (FirstRound quiz) ->
                     giveAnswer answer { quiz | progress = quiz.progress + 1 }
 
                 _ ->
@@ -213,8 +227,8 @@ update msg game =
 
         NeedNewQuestion ->
             case game of
-                Quiz quiz ->
-                    ( Quiz quiz
+                Quiz (FirstRound quiz) ->
+                    ( game
                     , case quiz.questions of
                         Shuffled { left, all } ->
                             Random.generate NextQuestions
@@ -235,14 +249,15 @@ update msg game =
             case game of
                 QuestionSelect ({ questions } as selections) ->
                     if readyToStart questions then
-                        ( Quiz
-                            { questions = Sifted questions
-                            , currentQuestion = Nothing
-                            , score = 0
-                            , progress = 0
-                            , activeQClasses = selections.activeQClasses
-                            , activeCats = selections.activeCats
-                            }
+                        ( Quiz <|
+                            FirstRound
+                                { questions = Sifted questions
+                                , currentQuestion = Nothing
+                                , score = 0
+                                , progress = 0
+                                , activeQClasses = selections.activeQClasses
+                                , activeCats = selections.activeCats
+                                }
                         , Random.generate ShuffledQs <| shuffleQuestions questions
                         )
 
@@ -254,29 +269,31 @@ update msg game =
 
         ShuffledQs qs ->
             case game of
-                Quiz quizState ->
+                Quiz (FirstRound quizState) ->
                     case quizState.questions of
                         Sifted all ->
-                            ( Quiz
-                                { quizState
-                                    | questions = Shuffled { all = all, left = qs, retry = [], number = List.length qs }
-                                }
+                            ( Quiz <|
+                                FirstRound
+                                    { quizState
+                                        | questions = Shuffled { all = all, left = qs, retry = [], number = List.length qs }
+                                    }
                             , Random.generate NextQuestions (newPlayingQuestion qs all quizState.activeQClasses)
                             )
 
                         Shuffled ({ all } as lar) ->
-                            ( Quiz
-                                { quizState
-                                    | questions =
-                                        Shuffled
-                                            { lar
-                                                | left = qs
-                                                , retry = []
-                                                , number = List.length qs
-                                            }
-                                    , score = 0
-                                    , progress = 0
-                                }
+                            ( Quiz <|
+                                FirstRound
+                                    { quizState
+                                        | questions =
+                                            Shuffled
+                                                { lar
+                                                    | left = qs
+                                                    , retry = []
+                                                    , number = List.length qs
+                                                }
+                                        , score = 0
+                                        , progress = 0
+                                    }
                             , Random.generate NextQuestions (newPlayingQuestion qs all quizState.activeQClasses)
                             )
 
@@ -354,6 +371,25 @@ update msg game =
                     , Cmd.none
                     )
 
+        ConsolidateMsg cMsg ->
+            case game of
+                Quiz (Consolidate state) ->
+                    let
+                        ( maybeNewCState, newCCmd ) =
+                            Con.update cMsg state
+                    in
+                    case maybeNewCState of
+                        Nothing ->
+                            ( resettedGame, Cmd.none )
+
+                        Just newCState ->
+                            ( Quiz <| Consolidate newCState
+                            , Cmd.map ConsolidateMsg newCCmd
+                            )
+
+                _ ->
+                    ( game, Cmd.none )
+
         StartNumbers ->
             let
                 ( nState, nCmd ) =
@@ -364,7 +400,7 @@ update msg game =
             )
 
 
-giveAnswer : GivenAnswer -> QuizState -> ( Game, Cmd Msg )
+giveAnswer : GivenAnswer -> FirstRoundState -> ( Game, Cmd Msg )
 giveAnswer answer quiz =
     case answer of
         Place answerPlace ->
@@ -374,71 +410,73 @@ giveAnswer answer quiz =
             giveUnsure quiz
 
 
-giveUnsure : QuizState -> ( Game, Cmd Msg )
+giveUnsure : FirstRoundState -> ( Game, Cmd Msg )
 giveUnsure quiz =
     case quiz.currentQuestion of
         Nothing ->
-            ( Quiz quiz, Cmd.none )
+            ( Quiz <| FirstRound quiz, Cmd.none )
 
         Just playingQuestion ->
             case playingQuestion.selectedPlace of
                 Just _ ->
-                    ( Quiz quiz, Cmd.none )
+                    ( Quiz <| FirstRound quiz, Cmd.none )
 
                 Nothing ->
-                    ( Quiz
-                        { quiz
-                            | currentQuestion =
-                                Just
-                                    { playingQuestion
-                                        | selectedPlace = Just Unsure
-                                    }
-                            , questions =
-                                case quiz.questions of
-                                    Shuffled lar ->
-                                        Shuffled { lar | retry = playingQuestion.question :: lar.retry }
+                    ( Quiz <|
+                        FirstRound
+                            { quiz
+                                | currentQuestion =
+                                    Just
+                                        { playingQuestion
+                                            | selectedPlace = Just Unsure
+                                        }
+                                , questions =
+                                    case quiz.questions of
+                                        Shuffled lar ->
+                                            Shuffled { lar | retry = playingQuestion.question :: lar.retry }
 
-                                    _ ->
-                                        quiz.questions
-                        }
+                                        _ ->
+                                            quiz.questions
+                            }
                     , Process.sleep 500 |> Task.perform (always NeedNewQuestion)
                     )
 
 
-giveAnswerPlace : AnswerPlace -> QuizState -> ( Game, Cmd Msg )
+giveAnswerPlace : AnswerPlace -> FirstRoundState -> ( Game, Cmd Msg )
 giveAnswerPlace answerPlace quiz =
     case quiz.currentQuestion of
         Nothing ->
-            ( Quiz quiz, Cmd.none )
+            ( Quiz <| FirstRound quiz, Cmd.none )
 
         Just playingQuestion ->
             case playingQuestion.selectedPlace of
                 Just _ ->
-                    ( Quiz quiz, Cmd.none )
+                    ( Quiz <| FirstRound quiz, Cmd.none )
 
                 Nothing ->
-                    ( Quiz
-                        ({ quiz
-                            | currentQuestion = Just { playingQuestion | selectedPlace = Just <| Place answerPlace }
-                         }
-                            |> (\q ->
-                                    if answerPlace == playingQuestion.correctPlace then
-                                        { q
-                                            | score = q.score + 1
-                                        }
+                    ( Quiz <|
+                        FirstRound
+                            ({ quiz
+                                | currentQuestion = Just { playingQuestion | selectedPlace = Just <| Place answerPlace }
+                             }
+                                |> (\q ->
+                                        if answerPlace == playingQuestion.correctPlace then
+                                            { q
+                                                | score = q.score + 1
+                                            }
 
-                                    else
-                                        { q
-                                            | questions =
-                                                case quiz.questions of
-                                                    Shuffled lar ->
-                                                        Shuffled { lar | retry = playingQuestion.question :: lar.retry }
+                                        else
+                                            { q
+                                                | questions =
+                                                    case quiz.questions of
+                                                        Shuffled lar ->
+                                                            Shuffled { lar | retry = playingQuestion.question :: lar.retry }
 
-                                                    _ ->
-                                                        quiz.questions
-                                        }
-                               )
-                        )
+                                                        _ ->
+                                                            quiz.questions
+                                            }
+                                   )
+                            )
                     , Process.sleep 500 |> Task.perform (always NeedNewQuestion)
                     )
 
@@ -497,8 +535,8 @@ type AnswerMark
     | UnsureMark
 
 
-viewAnswers : ( String, String, String ) -> Maybe GivenAnswer -> Element Msg
-viewAnswers ( leftOpt, midOpt, rightOpt ) selected =
+viewAnswers : ( String, String, String ) -> Maybe GivenAnswer -> Bool -> Element Msg
+viewAnswers ( leftOpt, midOpt, rightOpt ) selected isFirstRound =
     let
         optionText place =
             case place of
@@ -537,7 +575,12 @@ viewAnswers ( leftOpt, midOpt, rightOpt ) selected =
 
         option place =
             el
-                [ onClick (Answer <| Place place)
+                [ onClick <|
+                    if isFirstRound then
+                        Answer <| Place place
+
+                    else
+                        ConsolidateMsg (Con.GaveAnswerPlace place)
                 , centerX
                 , pointer
                 , case selectedPlace place of
@@ -562,14 +605,17 @@ viewAnswers ( leftOpt, midOpt, rightOpt ) selected =
 view : Game -> Html Msg
 view game =
     case game of
-        Quiz quizState ->
+        Quiz (FirstRound quizState) ->
             viewQuiz quizState
+
+        Quiz (Consolidate state) ->
+            viewConsolidate state
 
         QuestionSelect selections ->
             viewQuestionSelect selections
 
         Numbers nState ->
-            Numbers.view NumberMsg nState
+            Html.map NumberMsg <| Numbers.view nState
 
 
 hoverGrey =
@@ -690,10 +736,10 @@ viewQuestionSelect selections =
             ]
 
 
-viewQuiz : QuizState -> Html Msg
+viewQuiz : FirstRoundState -> Html Msg
 viewQuiz game =
     Element.layout [] <|
-        column [ centerX, width shrink, padding 50, spacing 50, height fill ]
+        column [ centerX, width shrink, padding 50, spacing 50, height fill ] <|
             [ case game.questions of
                 Shuffled { number } ->
                     column [ centerX, size 30, spacing 5 ]
@@ -713,37 +759,62 @@ viewQuiz game =
 
                 _ ->
                     Element.none
-            , column [ spacing 20, centerX ]
-                (case game.currentQuestion of
-                    Just cq ->
-                        [ el
-                            [ size 70
-                            , centerX
-                            , paddingEach { edges | bottom = 30 }
-                            , height shrink
-                            , case cq.selectedPlace of
-                                Just (Place sp) ->
-                                    if sp == cq.correctPlace then
-                                        color (rgb 0 1 0)
-
-                                    else
-                                        color (rgb 1 0 0)
-
-                                Just Unsure ->
-                                    color (rgb 1 1 0)
-
-                                Nothing ->
-                                    color (rgb 0 0 0)
-                            ]
-                          <|
-                            text cq.prompt
-                        , viewAnswers cq.options cq.selectedPlace
-                        , button [ Border.rounded 4, centerX, padding 5, Element.mouseOver [ Background.color hoverGrey ] ]
-                            { onPress = Just (Answer Unsure), label = text "Unsure" }
-                        ]
-
-                    Nothing ->
-                        [ Element.none ]
-                )
-            , el [ centerX ] <| text "Press q to return to menu."
             ]
+                ++ viewPlayingQuestion game.currentQuestion True
+
+
+viewConsolidate : Con.State -> Html Msg
+viewConsolidate state =
+    Element.layout [] <|
+        column [ centerX, width shrink, padding 50, spacing 50, height fill ] <|
+            [ el [ centerX, size 30 ] <|
+                text "The Ones You Didn't Know"
+            , el [ centerX, size 20 ] <|
+                text
+                    (String.fromInt state.numLeft
+                        ++ " left"
+                    )
+            ]
+                ++ viewPlayingQuestion state.currentQuestion False
+
+
+viewPlayingQuestion : Maybe PlayingQuestion -> Bool -> List (Element Msg)
+viewPlayingQuestion playingQuestion isFirstRound =
+    [ column [ spacing 20, centerX ]
+        (case playingQuestion of
+            Just cq ->
+                [ el
+                    [ size 70
+                    , centerX
+                    , paddingEach { edges | bottom = 30 }
+                    , height shrink
+                    , case cq.selectedPlace of
+                        Just (Place sp) ->
+                            if sp == cq.correctPlace then
+                                color (rgb 0 1 0)
+
+                            else
+                                color (rgb 1 0 0)
+
+                        Just Unsure ->
+                            color (rgb 1 1 0)
+
+                        Nothing ->
+                            color (rgb 0 0 0)
+                    ]
+                  <|
+                    text cq.prompt
+                , viewAnswers cq.options cq.selectedPlace isFirstRound
+                , if isFirstRound then
+                    button [ Border.rounded 4, centerX, padding 5, Element.mouseOver [ Background.color hoverGrey ] ]
+                        { onPress = Just (Answer Unsure), label = text "Unsure" }
+
+                  else
+                    Element.none
+                ]
+
+            Nothing ->
+                [ Element.none ]
+        )
+    , el [ centerX ] <| text "Press q to return to menu."
+    ]
