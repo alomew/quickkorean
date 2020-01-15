@@ -2,6 +2,9 @@
 
 - [ ] We could currently duplicate a question in the store and then have one of the "wrong" answers be a correct answer.
 - [ ] Looks pretty naff on phones
+- [ ] If you spam "Unsure", it increases progress counter, even though no questions are being 
+passed until NeedNewQuestion is fired. Button should be deactivated
+if answer already given; progress should get added when NeedNewQuestion fired.
 
 # New Features
 

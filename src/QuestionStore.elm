@@ -20,6 +20,7 @@ allQuestions =
         , idCounterQuestions
         , accCounterQuestions
         , familyQuestions
+        , lesson4class2
         ]
 
 
@@ -302,4 +303,26 @@ familyQuestions =
         , ( "부모님", "parents" )
         , ( "아버지", "father" )
         , ( "어머니", "mother" )
+        ]
+
+
+lesson4class2 =
+    List.map (\( hanguel, english ) -> Question hanguel (JustEnglish english) (Set.fromList [ "L4C2" ]))
+        [ ( "거", "thing" )
+        , ( "뉴욕", "New York" )
+        , ( "룸메이트", "roommate" )
+        , ( "방", "room" )
+        , ( "사이", "relationship, between" )
+        , ( "생물학", "Biology" )
+        , ( "아파트", "apartment" )
+        , ( "로스앤젤레스", "Los Angeles" )
+        , ( "하와이", "Hawaii" )
+        , ( "만", "only" )
+        , ( "고마워요", "is thankful" )
+        , ( "배워요", "learns" )
+        , ( "와요", "comes" )
+        , ( "줘요", "gives" )
+        , ( "저희", "we, us, our" )
+        , ( "이거", "this thing" )
+        , ( "제", "my" )
         ]
