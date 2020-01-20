@@ -21,6 +21,7 @@ allQuestions =
         , accCounterQuestions
         , familyQuestions
         , lesson4class2
+        , lesson5class1
         ]
 
 
@@ -325,4 +326,28 @@ lesson4class2 =
         , ( "저희", "we, us, our" )
         , ( "이거", "this thing" )
         , ( "제", "my" )
+        ]
+
+
+lesson5class1 =
+    List.map (\( hanguel, english ) -> Question hanguel (JustEnglish english) (Set.fromList [ "L5C1" ]))
+        [ ( "공원", "park" )
+        , ( "랩", "lab" )
+        , ( "백화점", "department store" )
+        , ( "생일", "birthday" )
+        , ( "서점", "bookstore" )
+        , ( "선물", "present, gift" )
+        , ( "쇼핑", "shopping" )
+        , ( "연슴", "practice" )
+        , ( "오래간만이에요", "it's been a long time" )
+        , ( "운동", "exercise" )
+        , ( "일", "work" )
+        , ( "점심", "lunch" )
+        , ( "커피숍", "coffee shop" )
+        , ( "테니스", "tennis" )
+        , ( "햄버거", "hamburger" )
+        , ( "가르쳐요", "teaches" )
+        , ( "사요", "buys" )
+        , ( "쳐요", "plays" )
+        , ( "안녕히", "in peace" )
         ]

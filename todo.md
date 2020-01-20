@@ -5,6 +5,7 @@
 - [ ] If you spam "Unsure", it increases progress counter, even though no questions are being 
 passed until NeedNewQuestion is fired. Button should be deactivated
 if answer already given; progress should get added when NeedNewQuestion fired.
+- [ ] Should work with back button -- i.e. use Navigation
 
 # New Features
 
