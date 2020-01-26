@@ -5976,6 +5976,58 @@ var $author$project$QuestionStore$lesson5class1 = A2(
 			_Utils_Tuple2('쳐요', 'plays'),
 			_Utils_Tuple2('안녕히', 'in peace')
 		]));
+var $author$project$QuestionStore$lesson5class2 = A2(
+	$elm$core$List$map,
+	function (_v0) {
+		var hanguel = _v0.a;
+		var english = _v0.b;
+		return A3(
+			$author$project$Question$Question,
+			hanguel,
+			$author$project$Question$JustEnglish(english),
+			$elm$core$Set$fromList(
+				_List_fromArray(
+					['L5C2'])));
+	},
+	_Utils_ap(
+		_List_fromArray(
+			[
+				_Utils_Tuple2('가게', 'store'),
+				_Utils_Tuple2('오전', 'AM'),
+				_Utils_Tuple2('오후', 'PM'),
+				_Utils_Tuple2('옷', 'clothes'),
+				_Utils_Tuple2('정치학', 'political science'),
+				_Utils_Tuple2('이번', 'this time'),
+				_Utils_Tuple2('학기', 'semester, academic term'),
+				_Utils_Tuple2('걷어요', 'walks'),
+				_Utils_Tuple2('들어요', 'listens, takes a course'),
+				_Utils_Tuple2('좋아해요', 'likes'),
+				_Utils_Tuple2('과몰', 'course, subject'),
+				_Utils_Tuple2('분', 'minute'),
+				_Utils_Tuple2('시', 'o\'clock'),
+				_Utils_Tuple2('같이', 'together'),
+				_Utils_Tuple2('언제', 'when'),
+				_Utils_Tuple2('에', 'at, in, on (time)'),
+				_Utils_Tuple2('하고', 'with'),
+				_Utils_Tuple2('~(으)러', 'in order to')
+			]),
+		A2(
+			$elm$core$List$map,
+			function (_v1) {
+				var h = _v1.a;
+				var a = _v1.b;
+				return _Utils_Tuple2(h + '요일', a);
+			},
+			_List_fromArray(
+				[
+					_Utils_Tuple2('월', 'Monday'),
+					_Utils_Tuple2('화', 'Tuesday'),
+					_Utils_Tuple2('수', 'Wednesday'),
+					_Utils_Tuple2('목', 'Thursday'),
+					_Utils_Tuple2('금', 'Friday'),
+					_Utils_Tuple2('토', 'Saturday'),
+					_Utils_Tuple2('일', 'Sunday')
+				]))));
 var $author$project$QuestionStore$locationQuestions = A2(
 	$elm$core$List$map,
 	function (_v0) {
@@ -6260,7 +6312,7 @@ var $author$project$QuestionStore$verbQuestions = A2(
 		]));
 var $author$project$QuestionStore$allQuestions = $elm$core$List$concat(
 	_List_fromArray(
-		[$author$project$QuestionStore$randomQuestions, $author$project$QuestionStore$locationQuestions, $author$project$QuestionStore$verbQuestions, $author$project$QuestionStore$objectQuestions, $author$project$QuestionStore$schoolQuestions, $author$project$QuestionStore$timeQuestions, $author$project$QuestionStore$greetingQuestions, $author$project$QuestionStore$instructionQuestions, $author$project$QuestionStore$jobQuestions, $author$project$QuestionStore$natNumQuestions, $author$project$QuestionStore$idCounterQuestions, $author$project$QuestionStore$accCounterQuestions, $author$project$QuestionStore$familyQuestions, $author$project$QuestionStore$lesson4class2, $author$project$QuestionStore$lesson5class1]));
+		[$author$project$QuestionStore$randomQuestions, $author$project$QuestionStore$locationQuestions, $author$project$QuestionStore$verbQuestions, $author$project$QuestionStore$objectQuestions, $author$project$QuestionStore$schoolQuestions, $author$project$QuestionStore$timeQuestions, $author$project$QuestionStore$greetingQuestions, $author$project$QuestionStore$instructionQuestions, $author$project$QuestionStore$jobQuestions, $author$project$QuestionStore$natNumQuestions, $author$project$QuestionStore$idCounterQuestions, $author$project$QuestionStore$accCounterQuestions, $author$project$QuestionStore$familyQuestions, $author$project$QuestionStore$lesson4class2, $author$project$QuestionStore$lesson5class1, $author$project$QuestionStore$lesson5class2]));
 var $elm$core$Dict$filter = F2(
 	function (isGood, dict) {
 		return A3(

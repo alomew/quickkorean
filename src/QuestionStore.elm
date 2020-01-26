@@ -22,6 +22,7 @@ allQuestions =
         , familyQuestions
         , lesson4class2
         , lesson5class1
+        , lesson5class2
         ]
 
 
@@ -351,3 +352,36 @@ lesson5class1 =
         , ( "쳐요", "plays" )
         , ( "안녕히", "in peace" )
         ]
+
+
+lesson5class2 =
+    List.map (\( hanguel, english ) -> Question hanguel (JustEnglish english) (Set.fromList [ "L5C2" ]))
+        ([ ( "가게", "store" )
+         , ( "오전", "AM" )
+         , ( "오후", "PM" )
+         , ( "옷", "clothes" )
+         , ( "정치학", "political science" )
+         , ( "이번", "this time" )
+         , ( "학기", "semester, academic term" )
+         , ( "걷어요", "walks" )
+         , ( "들어요", "listens, takes a course" )
+         , ( "좋아해요", "likes" )
+         , ( "과몰", "course, subject" )
+         , ( "분", "minute" )
+         , ( "시", "o'clock" )
+         , ( "같이", "together" )
+         , ( "언제", "when" )
+         , ( "에", "at, in, on (time)" )
+         , ( "하고", "with" )
+         , ( "~(으)러", "in order to" )
+         ]
+            ++ List.map (\( h, a ) -> ( h ++ "요일", a ))
+                [ ( "월", "Monday" )
+                , ( "화", "Tuesday" )
+                , ( "수", "Wednesday" )
+                , ( "목", "Thursday" )
+                , ( "금", "Friday" )
+                , ( "토", "Saturday" )
+                , ( "일", "Sunday" )
+                ]
+        )
