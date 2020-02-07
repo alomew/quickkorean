@@ -23,6 +23,8 @@ allQuestions =
         , lesson4class2
         , lesson5class1
         , lesson5class2
+        , lesson6class1
+        , lesson6class2
         ]
 
 
@@ -363,7 +365,7 @@ lesson5class2 =
          , ( "정치학", "political science" )
          , ( "이번", "this time" )
          , ( "학기", "semester, academic term" )
-         , ( "걷어요", "walks" )
+         , ( "걸어요", "walks" )
          , ( "들어요", "listens, takes a course" )
          , ( "좋아해요", "likes" )
          , ( "과몰", "course, subject" )
@@ -385,3 +387,57 @@ lesson5class2 =
                 , ( "일", "Sunday" )
                 ]
         )
+
+
+lesson6class1 =
+    List.map (\( hanguel, english ) -> Question hanguel (JustEnglish english) (Set.fromList [ "L6C1" ]))
+        [ ( "날씨", "weather" )
+        , ( "말", "speech, words" )
+        , ( "버스", "bus" )
+        , ( "볼펜", "ballpoint pen" )
+        , ( "비행기", "aeroplane" )
+        , ( "연필", "pencil" )
+        , ( "자전거", "bicycle" )
+        , ( "지하철", "subway" )
+        , ( "차", "car" )
+        , ( "하루", "(one) day" )
+        , ( "한인타운", "Korea Town" )
+        , ( "에서…까지", "from...to" )
+        , ( "~(으)로", "by means of" )
+        , ( "쯤", "about, around" )
+        , ( "걸려요", "takes (time)" )
+        , ( "사라요", "lives" )
+        , ( "써요", "writes" )
+        , ( "가까워요", "is close, near" )
+        , ( "더워요", "is hot" )
+        , ( "멀어요", "is far" )
+        , ( "쉬워요", "is easy" )
+        , ( "언려워요", "is difficult" )
+        , ( "추워요", "is cold" )
+        , ( "좁아요", "is narrow" )
+        , ( "보통", "usually" )
+        , ( "얼마나/얼마", "how long/how much" )
+        , ( "조금", "a little" )
+        , ( "시간", "hour (duration)" )
+        ]
+
+
+lesson6class2 =
+    List.map (\( hanguel, english ) -> Question hanguel (JustEnglish english) (Set.fromList [ "L6C2" ]))
+        [ ( "수영", "swimming" )
+        , ( "수영장", "swimming pool" )
+        , ( "어제", "yesterday" )
+        , ( "음악", "music" )
+        , ( "전화", "telephone" )
+        , ( "주말", "weekend" )
+        , ( "테니스장", "tennis court" )
+        , ( "파티", "party" )
+        , ( "몰라요", "don't know" )
+        , ( "일어나요", "gets up" )
+        , ( "너무", "too much" )
+        , ( "못", "cannot" )
+        , ( "안", "don't" )
+        , ( "왜", "why" )
+        , ( "지난", "last, past" )
+        , ( "한식", "Korean food" )
+        ]
