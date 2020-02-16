@@ -25,6 +25,7 @@ allQuestions =
         , lesson5class2
         , lesson6class1
         , lesson6class2
+        , lesson7class1
         ]
 
 
@@ -440,4 +441,35 @@ lesson6class2 =
         , ( "왜", "why" )
         , ( "지난", "last, past" )
         , ( "한식", "Korean food" )
+        ]
+
+
+lesson7class1 =
+    List.map (\( hanguel, english ) -> Question hanguel (JustEnglish english) (Set.fromList [ "L7C1" ]))
+        [ ( "겨절", "season" )
+        , ( "꽃", "flowers" )
+        , ( "극장", "theatre" )
+        , ( "나라", "country" )
+        , ( "내년", "next year" )
+        , ( "다음", "next, following" )
+        , ( "대학원", "graduate school" )
+        , ( "방학", "school holiday" )
+        , ( "브로드웨이 극장", "broadway theatre" )
+        , ( "약속", "engagement, promise" )
+        , ( "액션 영화", "action movie" )
+        , ( "여름", "summer" )
+        , ( "여행", "travel" )
+        , ( "영화", "movie" )
+        , ( "코미디", "comedy" )
+        , ( "받아요", "receives" )
+        , ( "아마", "probably" )
+        , ( "자주", "often, frequently" )
+        , ( "정말", "really" )
+        , ( "참", "by the way" )
+        , ( "무슨", "what, what kind of" )
+        , ( "어느", "which" )
+        , ( "~(으)ㄹ 거예요", "is with probability" )
+        , ( "작년", "last year" )
+        , ( "올해", "this year" )
+        , ( "모두 같이", "all together" )
         ]
