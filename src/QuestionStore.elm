@@ -26,6 +26,7 @@ allQuestions =
         , lesson6class1
         , lesson6class2
         , lesson7class1
+        , lesson7class2
         ]
 
 
@@ -472,4 +473,27 @@ lesson7class1 =
         , ( "작년", "last year" )
         , ( "올해", "this year" )
         , ( "모두 같이", "all together" )
+        ]
+
+
+lesson7class2 =
+    List.map (\( hanguel, english ) -> Question hanguel (JustEnglish english) (Set.fromList [ "L7C2" ]))
+        [ ( "가을", "autumn" )
+        , ( "겨울", "winter" )
+        , ( "마켓", "market" )
+        , ( "봄", "spring" )
+        , ( "설거지", "dishwashing" )
+        , ( "신문", "newspaper" )
+        , ( "심리학", "psychology" )
+        , ( "이야기", "chatting" )
+        , ( "주", "week" )
+        , ( "준비", "preparation" )
+        , ( "청소", "cleaning" )
+        , ( "크리스마스", "Christmas" )
+        , ( "흐려요", "it is cloudy" )
+        , ( "보내요", "spends time" )
+        , ( "장봐요", "buys groceries" )
+        , ( "가끔", "sometimes" )
+        , ( "많이", "much, many" )
+        , ( "서로", "each other" )
         ]
