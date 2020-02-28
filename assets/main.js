@@ -6180,6 +6180,48 @@ var $author$project$QuestionStore$lesson7class2 = A2(
 			_Utils_Tuple2('많이', 'much, many'),
 			_Utils_Tuple2('서로', 'each other')
 		]));
+var $author$project$QuestionStore$lesson8class1 = A2(
+	$elm$core$List$map,
+	function (_v0) {
+		var hanguel = _v0.a;
+		var english = _v0.b;
+		return A3(
+			$author$project$Question$Question,
+			hanguel,
+			$author$project$Question$JustEnglish(english),
+			$elm$core$Set$fromList(
+				_List_fromArray(
+					['L8C1'])));
+	},
+	_List_fromArray(
+		[
+			_Utils_Tuple2('가운데', 'the middle, the centre'),
+			_Utils_Tuple2('건너편', 'the other side'),
+			_Utils_Tuple2('교회', 'church'),
+			_Utils_Tuple2('꽃집', 'florist'),
+			_Utils_Tuple2('동네', 'neighbourhood'),
+			_Utils_Tuple2('서울', 'Seoul'),
+			_Utils_Tuple2('슈퍼', 'supermarket'),
+			_Utils_Tuple2('약국', 'pharmacy'),
+			_Utils_Tuple2('지도', 'map'),
+			_Utils_Tuple2('쪽', 'side, direction'),
+			_Utils_Tuple2('군데', 'place, spot (native ctr.)'),
+			_Utils_Tuple2('번', 'number (sino ctr.)'),
+			_Utils_Tuple2('~지요?', 'isn\'t it?'),
+			_Utils_Tuple2('여기', 'here'),
+			_Utils_Tuple2('거기', 'there'),
+			_Utils_Tuple2('저기', 'over there'),
+			_Utils_Tuple2('내리세요', 'gets off'),
+			_Utils_Tuple2('타고', 'gets on, rides'),
+			_Utils_Tuple2('깨끗해요', 'is clean'),
+			_Utils_Tuple2('따뜻해요', 'is warm'),
+			_Utils_Tuple2('조용해요', 'is quiet'),
+			_Utils_Tuple2('여러', 'many, several (replace #)'),
+			_Utils_Tuple2('이', 'this'),
+			_Utils_Tuple2('그', 'that'),
+			_Utils_Tuple2('저', 'that over there'),
+			_Utils_Tuple2('교수님', 'professor')
+		]));
 var $author$project$QuestionStore$locationQuestions = A2(
 	$elm$core$List$map,
 	function (_v0) {
@@ -6464,7 +6506,7 @@ var $author$project$QuestionStore$verbQuestions = A2(
 		]));
 var $author$project$QuestionStore$allQuestions = $elm$core$List$concat(
 	_List_fromArray(
-		[$author$project$QuestionStore$randomQuestions, $author$project$QuestionStore$locationQuestions, $author$project$QuestionStore$verbQuestions, $author$project$QuestionStore$objectQuestions, $author$project$QuestionStore$schoolQuestions, $author$project$QuestionStore$timeQuestions, $author$project$QuestionStore$greetingQuestions, $author$project$QuestionStore$instructionQuestions, $author$project$QuestionStore$jobQuestions, $author$project$QuestionStore$natNumQuestions, $author$project$QuestionStore$idCounterQuestions, $author$project$QuestionStore$accCounterQuestions, $author$project$QuestionStore$familyQuestions, $author$project$QuestionStore$lesson4class2, $author$project$QuestionStore$lesson5class1, $author$project$QuestionStore$lesson5class2, $author$project$QuestionStore$lesson6class1, $author$project$QuestionStore$lesson6class2, $author$project$QuestionStore$lesson7class1, $author$project$QuestionStore$lesson7class2]));
+		[$author$project$QuestionStore$randomQuestions, $author$project$QuestionStore$locationQuestions, $author$project$QuestionStore$verbQuestions, $author$project$QuestionStore$objectQuestions, $author$project$QuestionStore$schoolQuestions, $author$project$QuestionStore$timeQuestions, $author$project$QuestionStore$greetingQuestions, $author$project$QuestionStore$instructionQuestions, $author$project$QuestionStore$jobQuestions, $author$project$QuestionStore$natNumQuestions, $author$project$QuestionStore$idCounterQuestions, $author$project$QuestionStore$accCounterQuestions, $author$project$QuestionStore$familyQuestions, $author$project$QuestionStore$lesson4class2, $author$project$QuestionStore$lesson5class1, $author$project$QuestionStore$lesson5class2, $author$project$QuestionStore$lesson6class1, $author$project$QuestionStore$lesson6class2, $author$project$QuestionStore$lesson7class1, $author$project$QuestionStore$lesson7class2, $author$project$QuestionStore$lesson8class1]));
 var $elm$core$Dict$filter = F2(
 	function (isGood, dict) {
 		return A3(

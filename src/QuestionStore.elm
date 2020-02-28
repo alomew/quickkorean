@@ -27,6 +27,7 @@ allQuestions =
         , lesson6class2
         , lesson7class1
         , lesson7class2
+        , lesson8class1
         ]
 
 
@@ -496,4 +497,35 @@ lesson7class2 =
         , ( "가끔", "sometimes" )
         , ( "많이", "much, many" )
         , ( "서로", "each other" )
+        ]
+
+
+lesson8class1 =
+    List.map (\( hanguel, english ) -> Question hanguel (JustEnglish english) (Set.fromList [ "L8C1" ]))
+        [ ( "가운데", "the middle, the centre" )
+        , ( "건너편", "the other side" )
+        , ( "교회", "church" )
+        , ( "꽃집", "florist" )
+        , ( "동네", "neighbourhood" )
+        , ( "서울", "Seoul" )
+        , ( "슈퍼", "supermarket" )
+        , ( "약국", "pharmacy" )
+        , ( "지도", "map" )
+        , ( "쪽", "side, direction" )
+        , ( "군데", "place, spot (native ctr.)" )
+        , ( "번", "number (sino ctr.)" )
+        , ( "~지요?", "isn't it?" )
+        , ( "여기", "here" )
+        , ( "거기", "there" )
+        , ( "저기", "over there" )
+        , ( "내리세요", "gets off" )
+        , ( "타고", "gets on, rides" )
+        , ( "깨끗해요", "is clean" )
+        , ( "따뜻해요", "is warm" )
+        , ( "조용해요", "is quiet" )
+        , ( "여러", "many, several (replace #)" )
+        , ( "이", "this" )
+        , ( "그", "that" )
+        , ( "저", "that over there" )
+        , ( "교수님", "professor" )
         ]
