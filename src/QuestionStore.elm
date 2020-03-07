@@ -28,6 +28,7 @@ allQuestions =
         , lesson7class1
         , lesson7class2
         , lesson8class1
+        , lesson8class2
         ]
 
 
@@ -528,4 +529,30 @@ lesson8class1 =
         , ( "그", "that" )
         , ( "저", "that over there" )
         , ( "교수님", "professor" )
+        ]
+
+
+lesson8class2 =
+    List.map (\( hanguel, english ) -> Question hanguel (JustEnglish english) (Set.fromList [ "L8C2" ]))
+        [ ( "근처", "nearby" )
+        , ( "말씀", "(hon.) speech, words" )
+        , ( "시청", "city hall" )
+        , ( "역", "station" )
+        , ( "오른쪽", "right side" )
+        , ( "왼쪽", "left side" )
+        , ( "우표", "stamp" )
+        , ( "은행", "bank" )
+        , ( "의사", "doctor" )
+        , ( "처음", "the first time" )
+        , ( "호선", "subway line" )
+        , ( "좀", "little (embellish)" )
+        , ( "쭉", "straight" )
+        , ( "돌다", "to turn" )
+        , ( "팔다", "to sell" )
+        , ( "몯겠슴니다", "asks" )
+        , ( "보이다", "to be visible" )
+        , ( "뵙다", "to see (hum.)" )
+        , ( "감사합니다", "thank you" )
+        , ( "미안하다", "to be sorry" )
+        , ( "(으)로", "toward, via" )
         ]
